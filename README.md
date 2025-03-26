@@ -1,13 +1,13 @@
-Immich Video Editor
+**Immich Video Editor
 Immich Video Editor ist eine Webanwendung, mit der automatisch Videos aus Medien-Assets erstellt werden können. Medien werden direkt vom Immich-Server geladen und lassen sich in einer benutzerfreundlichen Drag-&-Drop-Timeline arrangieren.
 
-✨ Features
+# ✨ Features
 🖼️ Automatischer Medienimport
 Bilder und Videos werden direkt über die Immich API geladen.
 
 Unterstützt auch Live-Photo-Videos und Thumbnails.
 
-🎞️ Drag‑&‑Drop-Timeline
+# 🎞️ Drag‑&‑Drop-Timeline
 Medien und Übergänge können frei angeordnet und bearbeitet werden.
 
 Vorschau durch Live-Hover über der Timeline.
@@ -97,3 +97,4 @@ Undo/Redo für Timeline-Aktionen
 Benutzer-Session & Albumverwaltung
 
 Fortschrittsanzeige beim Export
+**
