@@ -1,0 +1,19 @@
+# Node Modules
+node_modules/
+medien/
+src/processing/medien/
+# Environment files
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Build output
+/dist
+/build
+
+# OS-spezifische Dateien
+.DS_Store
+Thumbs.db

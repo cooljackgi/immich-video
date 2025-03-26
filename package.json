@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "start": "node src/server.js",
+    "process": "node src/processing/main-process.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.7",
+    "exif-parser": "^0.1.12",
+    "express": "^4.21.2",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
