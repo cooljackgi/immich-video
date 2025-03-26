@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 const { getImageCaptionLocal } = require('./image-caption');
 const { fetchAlbum, downloadAsset } = require('./immich-api');
 
@@ -49,13 +50,13 @@ ${combinedCaption}
 
   console.log('🧠 LLM Prompt (lokal):', prompt);
 
-  const ollamaEndpoint = 'http://localhost:11434/api/chat';
+  const ollamaEndpoint = process.env.OLLAMA_ENDPOINT;
 
   try {
     const response = await axios.post(
       ollamaEndpoint,
       {
-        model: 'mistral:7b-instruct',
+        model: process.env.OLLAMA_MODEL,
         messages: [
           { role: 'system', content: 'Du bist ein kreativer Generator für deutsche Fotoalbumtitel.' },
           { role: 'user', content: prompt }

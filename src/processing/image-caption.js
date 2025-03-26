@@ -5,8 +5,10 @@ const FormData = require('form-data');
 
 async function getImageCaptionLocal(imagePath) {
   const form = new FormData();
+  const captionApiUrl = process.env.CAPTION_API_URL;
+
   form.append('file', fs.createReadStream(imagePath));
-  const response = await axios.post('http://localhost:5000/caption', form, {
+  const response = await axios.post(captionApiUrl, form, {
     headers: form.getHeaders()
   });
   return response.data.caption;
