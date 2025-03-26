@@ -1,86 +1,66 @@
-🇩🇪 Deutsch
 
 
 
-# 🎮 Immich Video Editor
 
-Der Immich Video Editor ist eine Webanwendung zur automatischen Erstellung von Videos aus Bildern, Clips und Audiodateien – direkt aus deinem Immich-Server.Die Medien lassen sich einfach in einer intuitiven Drag-&-Drop-Timeline arrangieren.
+
+**Immich Video Editor
+Immich Video Editor ist eine Webanwendung, mit der automatisch Videos aus Medien-Assets erstellt werden können. Medien werden direkt vom Immich-Server geladen und lassen sich in einer benutzerfreundlichen Drag-&-Drop-Timeline arrangieren.
 
 # ✨ Features
-
 🖼️ Automatischer Medienimport
+Bilder und Videos werden direkt über die Immich API geladen.
 
-Medien werden direkt über die Immich API geladen.
+Unterstützt auch Live-Photo-Videos und Thumbnails.
 
-Unterstützung für Live-Fotos, Thumbnails und Videos.
+# 🎞️ Drag‑&‑Drop-Timeline
+Medien und Übergänge können frei angeordnet und bearbeitet werden.
 
- 🎮 Drag-&-Drop-Timeline
+Vorschau durch Live-Hover über der Timeline.
 
-Medien und Übergänge frei anordnen und bearbeiten
+Zeitstrahl zeigt Transition-Marker und aktuelle Position.
 
-Vorschau durch Live-Hover über der Timeline
+# ⏱️ Daueranpassung
+Bilder haben standardmäßig 5 Sekunden Dauer.
 
-Zeitstrahl zeigt Transition-Marker und aktuelle Position
+Dauer kann pro Clip individuell verändert werden.
 
-⏱️ Flexible Clip-Dauer
+# 🔁 Übergänge
+Übergangseffekte wie fade, wipeleft, slideright, circleopen, circleclose, pixelize.
 
-Bilder erhalten automatisch 5 Sekunden Dauer
+Übergangsdauer und Overlap frei konfigurierbar.
 
-Dauer kann pro Clip individuell angepasst werden
+# 🧠 Lokale KI-Titelgenerierung
+KI-generierte Titelvorschläge auf Deutsch über lokale Modelle:
 
-🔀 Übergangseffekte
+blip-caption:latest für Bildunterschriften
 
-Unterstützte Effekte: fade, wipeleft, slideright, circleopen, circleclose, pixelize
+Ollama mistral:7b-instruct für kreative Titelideen
 
-Übergangsdauer und Overlap frei konfigurierbar
+#⚡ GPU-unterstütztes Rendering
+Videos werden mit FFmpeg und h264_nvenc (NVIDIA GPU) gerendert.
 
-# 🧐 Lokale KI-Titelgenerierung
+Übergänge, Musik und dynamische Titelclips integriert.
 
-blip-caption:latest für automatische Bildunterschriften
-
-Ollama mistral:7b-instruct für kreative Titelideen (deutschsprachig)
-
-⚡ GPU-unterstütztes Rendering
-
-Finales Video wird mit FFmpeg + NVIDIA h264_nvenc gerendert
-
-Übergänge, Musik und dynamische Titelclips werden integriert
-
-☁️ Upload zurück zu Immich
+# ☁️ Upload zurück zu Immich
 
 Nach dem Export kann das fertige Video automatisch in ein Album hochgeladen werden
 
 Album wird über die Album-ID ausgewählt
 
-# ⚙️ Zentrale Konfiguration
 
+# ⚙️ Flexible Konfiguration
 Einstellungen über .env-Datei steuerbar
 
-API-Keys, Host-Adressen, Ports, Modellpfade etc.
+API-Keys, Host-Adressen, Ports, Modellpfade etc. zentral konfigurierbar
 
 # 🧪 Technologie-Stack
+Bereich	Technologie
+Backend	Node.js, Express, FFmpeg (fluent-ffmpeg)
+Frontend	HTML, CSS, JavaScript
+KI-Modelle	[blip-caption:latest], [Ollama mistral:7b-instruct]
+Medienquelle	Immich API
 
-Bereich
 
-Technologie
-
-Backend
-
-Node.js, Express, FFmpeg (via fluent-ffmpeg)
-
-Frontend
-
-HTML, CSS, JavaScript
-
-KI-Modelle
-
-blip-caption:latest, ollama mistral:7b-instruct
-
-Medienquelle
-
-Immich API
-
-⚙️ Beispielhafte .env-Konfiguration
 
 # KI & Captioning
 OLLAMA_MODEL=mistral:7b-instruct
@@ -89,33 +69,37 @@ CAPTION_MODEL=blip-caption:latest
 # Immich API
 IMMICH_API_KEY=your-immich-api-key
 IMMICH_API=http://192.168.x.x:2283/api
-# oder externe Adresse
-# IMMICH_API=https://foto.domain.com/api
+oder die echt Adresse
+IMMICH_API=https://foto.xxx.com/api
 
-# Upload
+# Sonstiges
+PORT=3000
 UPLOAD_PATH=./uploads
 OUTPUT_PATH=./output
-PORT=3000
 
-🧬 Ollama & BLIP Setup (lokale Installation)
 
+
+🧠 Ollama & BLIP-Setup (lokale Installation)
+bash
+Kopieren
+Bearbeiten
 unzip ollama_blip_setup.zip
 chmod +x setup-ai.sh
 ./setup-ai.sh
+Das Skript installiert:
 
-Das Setup installiert:
+🧠 Ollama (für LLMs wie mistral:7b-instruct)
 
-🧐 Ollama (für lokale LLMs wie mistral:7b-instruct)
+🖼️ blip-caption als Docker-API (für automatische Bildunterschriften)
 
-🖼️ blip-caption (als Docker-API für Bildunterschriften)
+Nach dem Setup:
 
-Nach dem Setup erreichbar unter:
+📍 Ollama API: http://localhost:11434
 
-📍 Ollama: http://localhost:11434
+📍 BLIP-Caption API: http://localhost:5000/caption
 
-📍 BLIP-Caption: http://localhost:5000/caption
 
-# 🛠️ Noch geplant / TODO
+🛠️ Noch geplant / TODO
 Musikspur automatisch generieren (KI)
 
 Timeline-Snapping und Zoom
