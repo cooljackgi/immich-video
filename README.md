@@ -114,7 +114,7 @@ Nach dem Setup erreichbar unter:
 
 ---
 
-*Ich bastle an einem kleinen Video-Add-on. Wenn du Zeit und Lust hast — mach gern mit!* 😊
+
 
 ---
 
@@ -227,6 +227,4 @@ After setup available at:
 - [ ] 📊 Export progress indicator
 
 ---
-
-*I'm building a little video creation add-on. If you have some time and pleasure — go for it!* 😊
 
