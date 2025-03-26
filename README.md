@@ -14,34 +14,34 @@ Vorschau durch Live-Hover über der Timeline.
 
 Zeitstrahl zeigt Transition-Marker und aktuelle Position.
 
-⏱️ Daueranpassung
+# ⏱️ Daueranpassung
 Bilder haben standardmäßig 5 Sekunden Dauer.
 
 Dauer kann pro Clip individuell verändert werden.
 
-🔁 Übergänge
+# 🔁 Übergänge
 Übergangseffekte wie fade, wipeleft, slideright, circleopen, circleclose, pixelize.
 
 Übergangsdauer und Overlap frei konfigurierbar.
 
-🧠 Lokale KI-Titelgenerierung
+# 🧠 Lokale KI-Titelgenerierung
 KI-generierte Titelvorschläge auf Deutsch über lokale Modelle:
 
 blip-caption:latest für Bildunterschriften
 
 Ollama mistral:7b-instruct für kreative Titelideen
 
-⚡ GPU-unterstütztes Rendering
+#⚡ GPU-unterstütztes Rendering
 Videos werden mit FFmpeg und h264_nvenc (NVIDIA GPU) gerendert.
 
 Übergänge, Musik und dynamische Titelclips integriert.
 
-⚙️ Flexible Konfiguration
+# ⚙️ Flexible Konfiguration
 Einstellungen über .env-Datei steuerbar
 
 API-Keys, Host-Adressen, Ports, Modellpfade etc. zentral konfigurierbar
 
-🧪 Technologie-Stack
+# 🧪 Technologie-Stack
 Bereich	Technologie
 Backend	Node.js, Express, FFmpeg (fluent-ffmpeg)
 Frontend	HTML, CSS, JavaScript
