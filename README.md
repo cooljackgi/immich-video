@@ -44,7 +44,7 @@ AI-generated title suggestions (in German) using local models:
 ---
 
 
-# ☁️ Upload zurück zu Immich
+# ☁️ Upload back to Immich
 Nach dem Export kann das fertige Video automatisch in ein Album hochgeladen werden
 
 Album wird über die Album-ID ausgewählt
