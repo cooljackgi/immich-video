@@ -129,6 +129,32 @@ app.get('/api/album', async (req, res) => {
             console.log("GET /api/album - Lade herunter:", fileName);
             await downloadAsset(asset, fileName);
             asset.downloadName = asset.originalFileName;
+
+
+
+            if (asset.livePhotoVideoId) {
+                const liveVideoFileName = `${asset.livePhotoVideoId}.mp4`;
+                const liveVideoPath = path.join(mediaFolder, liveVideoFileName);
+              
+                if (!fs.existsSync(liveVideoPath)) {
+                  console.log(`Lade Live-Video ${asset.livePhotoVideoId} für Asset ${asset.id}`);
+                  await downloadLivePhotoVideo(asset.livePhotoVideoId, liveVideoPath);
+                }
+              
+                // 🎬 Neues Media-Objekt für das Live-Video
+                const liveAsset = {
+                  type: 'VIDEO',
+                  downloadName: liveVideoFileName,
+                  originalFileName: liveVideoFileName,
+                  duration: 3000, // Optional: Standardwert (z.B. 3s)
+                  isLivePhoto: true,
+                  sourceImageId: asset.id // optional zur Verknüpfung
+                };
+              
+                album.assets.push(liveAsset); // ✅ füge Live-Video als separates Asset hinzu
+              }
+              
+
         }));
 
         console.log("GET /api/album - Antwort (Assets):", album.assets);

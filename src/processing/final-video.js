@@ -44,14 +44,25 @@ function getDurationInSeconds(filePath) {
 
 function ensureAudioTrack(filePath) {
   if (hasAudioStream(filePath)) return filePath;
+
   const duration = getDurationInSeconds(filePath);
   const silentFilePath = filePath.replace(/\.mp4$/, '_with_audio.mp4');
+
   if (!fs.existsSync(silentFilePath)) {
-    const cmd = `ffmpeg -y -i "${filePath}" -f lavfi -t ${duration} -i anullsrc=channel_layout=stereo:sample_rate=48000 -c:v copy -c:a aac -shortest "${silentFilePath}"`;
-    execSync(cmd);
+    const cmd = `ffmpeg -y -i "${filePath}" \
+-f lavfi -t ${duration} -i anullsrc=channel_layout=stereo:sample_rate=48000 \
+-r 25 -vsync 2 \
+-c:v libx264 -preset veryfast -pix_fmt yuv420p \
+-c:a aac -b:a 192k \
+-shortest "${silentFilePath}"`;
+
+    console.log(`🎙️ Adding silent audio: ${cmd}`);
+    execSync(cmd, { stdio: 'inherit' });
   }
+
   return silentFilePath;
 }
+
 
 async function processVideo(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
@@ -60,9 +71,13 @@ async function processVideo(inputPath, outputPath) {
       .outputOptions([
         '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
         '-r', '25',
-        '-vsync', 'vfr',
+        '-vsync', '2',
         '-pix_fmt', 'yuv420p',
-        '-c:a', 'copy'
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-c:a', 'aac',
+        '-b:a', '192k',
+        '-shortest'
       ])
       .on('start', commandLine => console.log(`FFmpeg startet (Video): ${commandLine}`))
       .on('end', () => {
@@ -127,11 +142,11 @@ async function generateFinalVideo(options, outputPath) {
     await createFinalVideoWithTransitions(processedClips, outputPath, transitions);
     console.log(`✅ Export abgeschlossen: ${outputPath}`);
     // ⬇️ NEU: Nur verwendete Dateien behalten
-const usedFiles = timelineAssets
-.filter(asset => asset.downloadName)
-.map(asset => asset.downloadName);
+    const usedFiles = timelineAssets
+      .filter(asset => asset.downloadName)
+      .map(asset => asset.downloadName);
 
-cleanAllMediaFiles();
+    cleanAllMediaFiles();
     return outputPath;
   } catch (error) {
     console.error("❌ Fehler in generateFinalVideo:", error);
@@ -165,8 +180,8 @@ function cleanUnusedMedia(usedFiles = []) {
 function cleanAllMediaFiles() {
   const folders = [
     '../../medien',
-  '../../medien/thumbnails',
-  './medien'
+    '../../medien/thumbnails',
+    './medien'
   ];
 
   const validExt = ['.jpg', '.jpeg', '.png', '.mp4', '.mov', '.webp', '.txt'];
@@ -209,17 +224,26 @@ function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = [
     const inputA = i === 0 ? `[${i}:v]` : `[v${i}]`;
     const inputB = `[${i + 1}:v]`;
     const outLabel = i === mediaFiles.length - 2 ? 'vout' : `v${i + 1}`;
-    const trans = transitions[i] || {};
-    const transType = trans.transition || 'fade';
-    const transDuration = (trans.duration || 1) ;
-    accumulatedOffset += (mediaFiles[i].durationSec || 5) - transDuration;
-    filterParts.push(`${inputA}${inputB}xfade=transition=${transType}:duration=${transDuration}:offset=${accumulatedOffset.toFixed(3)}[${outLabel}]`);
-    videoOut = `[${outLabel}]`;
-
+    
     const inputA_a = i === 0 ? `[${i}:a]` : `[a${i}]`;
     const inputB_a = `[${i + 1}:a]`;
     const outLabelA = i === mediaFiles.length - 2 ? 'aout' : `a${i + 1}`;
-    audioParts.push(`${inputA_a}${inputB_a}acrossfade=d=${transDuration}:c1=exp:c2=exp[${outLabelA}]`);
+
+    // 🔥 Berechne dynamisch die Übergangsdauer
+    const trans = transitions[i] || {};
+    let transType = trans.transition || 'fade';
+    const durA = mediaFiles[i].durationSec;
+    const durB = mediaFiles[i + 1].durationSec;
+    let transDuration = Math.min((trans.duration || 1), durA, durB, 2); // max. 2s oder so
+
+    // 🧠 Offset ist Clip A komplett - Übergangsdauer
+    const offset = accumulatedOffset + durA - transDuration;
+
+    filterParts.push(`${inputA}${inputB}xfade=transition=${transType}:duration=${transDuration.toFixed(2)}:offset=${offset.toFixed(2)}[${outLabel}]`);
+    audioParts.push(`${inputA_a}${inputB_a}acrossfade=d=${transDuration.toFixed(2)}:c1=exp:c2=exp[${outLabelA}]`);
+
+    accumulatedOffset = offset;
+    videoOut = `[${outLabel}]`;
     audioOut = `[${outLabelA}]`;
   }
 
@@ -228,18 +252,20 @@ function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = [
 
   console.log('[createFinalVideoWithTransitions] FFmpeg Command:\n' + ffmpegCommand);
   execSync(ffmpegCommand, { stdio: 'inherit' });
-  const tempDir = path.join(__dirname, '../../temp');
-fs.readdirSync(tempDir).forEach(file => {
-  if (file.endsWith('.mp4') || file.endsWith('.txt')) {
-    const filePath = path.join(tempDir, file);
-    try {
-      fs.unlinkSync(filePath);
-    } catch (err) {
-      console.warn(`⚠️ Fehler beim Löschen von ${filePath}`);
-    }
-  }
-});
 
+  const tempDir = path.join(__dirname, '../../temp');
+  fs.readdirSync(tempDir).forEach(file => {
+    if (file.endsWith('.mp4') || file.endsWith('.txt')) {
+      try {
+        fs.unlinkSync(path.join(tempDir, file));
+      } catch (err) {
+        console.warn(`⚠️ Fehler beim Löschen von ${file}`);
+      }
+    }
+  });
+
+  console.log('✅ Export abgeschlossen:', outputPath);
 }
+
 
 module.exports = { generateFinalVideo, generateVideo: generateFinalVideo };

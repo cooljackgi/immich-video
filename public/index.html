@@ -93,6 +93,7 @@
       margin-top: 20px;
       text-align: center;
     }
+
     #hoverPreviewImage,
     #hoverPreviewVideo {
       max-width: 400px;
@@ -148,9 +149,9 @@
       box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
       border-radius: 6px;
       overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  max-width: 100%;
+      overflow-y: hidden;
+      white-space: nowrap;
+      max-width: 100%;
     }
 
     .timeline::before {
@@ -421,7 +422,7 @@
       <div id="timelineDuration">Gesamtdauer: 00:00:00</div>
 
       <!-- Timeline -->
-      
+
 
       <!-- Entferne Timeline-Bilder -->
       <div style="margin: 20px 0; text-align: center;">
@@ -430,957 +431,964 @@
           <video id="hoverPreviewVideo" muted controls></video>
         </div>
         <canvas id="liveCanvas" width="800" height="30"></canvas>
-        
+
         <div id="canvasTimeDisplay">00:00:00</div>
       </div>
-        
-      
-      
+
+
+
       <!-- Vorschauvideo darunter -->
       <div style="text-align: center; margin-bottom: 20px;">
-        <video id="previewVideo" width="400" style="display: none; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);" muted autoplay></video>
+        <video id="previewVideo" width="400"
+          style="display: none; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);" muted autoplay></video>
       </div>
-      
 
-        <!-- Transition-Liste -->
-        <h3>Übergänge</h3>
-        <div id="transitionList" class="transition-list">
-          <div class="transition-item" draggable="true" data-transition="fade">Fade</div>
-          <div class="transition-item" draggable="true" data-transition="wipeleft">Wipe Left</div>
-          <div class="transition-item" draggable="true" data-transition="slideright">Slide Right</div>
-          <div class="transition-item" draggable="true" data-transition="circleopen">Circle Open</div>
-          <div class="transition-item" draggable="true" data-transition="circleclose">Circle Close</div>
-          <div class="transition-item" draggable="true" data-transition="pixelize">Pixelize</div>
-        </div>
-        <div class="timeline" id="timeline"></div>
-        <div class="form-group">
-          <h3>Medien</h3>
-          <div id="mediaList" class="media-list"></div>
-          <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
-        </div>
 
-        <!-- Video-Container -->
-        <div id="videoContainer">
-          <h3>Finales Video</h3>
-          <video id="finalVideo" width="640" controls>
-            <source src="" type="video/mp4">
-            Dein Browser unterstützt dieses Videoformat nicht.
-          </video>
-        </div>
+      <!-- Transition-Liste -->
+      <h3>Übergänge</h3>
+      <div id="transitionList" class="transition-list">
+        <div class="transition-item" draggable="true" data-transition="fade">Fade</div>
+        <div class="transition-item" draggable="true" data-transition="wipeleft">Wipe Left</div>
+        <div class="transition-item" draggable="true" data-transition="slideright">Slide Right</div>
+        <div class="transition-item" draggable="true" data-transition="circleopen">Circle Open</div>
+        <div class="transition-item" draggable="true" data-transition="circleclose">Circle Close</div>
+        <div class="transition-item" draggable="true" data-transition="pixelize">Pixelize</div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+      <div class="form-group">
+        <h3>Medien</h3>
+        <div id="mediaList" class="media-list"></div>
+        <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
+      </div>
+
+      <!-- Video-Container -->
+      <div id="videoContainer">
+        <h3>Finales Video</h3>
+        <video id="finalVideo" width="640" controls>
+          <source src="" type="video/mp4">
+          Dein Browser unterstützt dieses Videoformat nicht.
+        </video>
       </div>
     </div>
+  </div>
 
 
-    <script>
-      let mediaItems = [];
-      let timelineItems = [];
-      let draggedItem = null;
-      let draggedTransition = null;
-      let draggedTimelineIndex = null;
+  <script>
+    let mediaItems = [];
+    let timelineItems = [];
+    let draggedItem = null;
+    let draggedTransition = null;
+    let draggedTimelineIndex = null;
 
-      // Standarddauer für Bilder: 5000 ms
-      function ensureImageDuration(item) {
-        if (item.type === 'IMAGE') {
-          // Falls die Dauer als String '0:00:00.00000' oder leer ist, setze 5000ms (5s)
-          if (!item.duration || item.duration === "0:00:00.00000" || item.duration === "00:00:00.000") {
-            console.warn(`Bild ${item.downloadName} hatte keine Dauer, setze 5000ms`);
-            item.duration = 5000; // 5 Sekunden in Millisekunden
-          } else if (typeof item.duration === 'string') {
-            // Falls die Dauer ein String ist (z. B. "00:00:08.440"), umwandeln
-            item.duration = parseDurationString(item.duration);
-          }
-        } else if (item.type === 'VIDEO' && typeof item.duration === 'string') {
-          // Falls die Dauer bei Videos auch ein String ist, konvertieren
+    // Standarddauer für Bilder: 5000 ms
+    function ensureImageDuration(item) {
+      if (item.type === 'IMAGE') {
+        // Falls die Dauer als String '0:00:00.00000' oder leer ist, setze 5000ms (5s)
+        if (!item.duration || item.duration === "0:00:00.00000" || item.duration === "00:00:00.000") {
+          console.warn(`Bild ${item.downloadName} hatte keine Dauer, setze 5000ms`);
+          item.duration = 5000; // 5 Sekunden in Millisekunden
+        } else if (typeof item.duration === 'string') {
+          // Falls die Dauer ein String ist (z. B. "00:00:08.440"), umwandeln
           item.duration = parseDurationString(item.duration);
         }
-
-        console.log(`Finale Dauer für ${item.downloadName || 'Unbekannt'}:`, item.duration);
+      } else if (item.type === 'VIDEO' && typeof item.duration === 'string') {
+        // Falls die Dauer bei Videos auch ein String ist, konvertieren
+        item.duration = parseDurationString(item.duration);
       }
 
-
-      function parseDurationString(durationStr) {
-        if (!durationStr) return 0;
-
-        const parts = durationStr.split(':'); // Zerlegt in [hh, mm, ss.ms]
-        if (parts.length !== 3) return 0;
-
-        const hours = parseInt(parts[0], 10) || 0;
-        const minutes = parseInt(parts[1], 10) || 0;
-
-        // Sekunden + Millisekunden aufteilen
-        const secondsParts = parts[2].split('.');
-        const seconds = parseInt(secondsParts[0], 10) || 0;
-        const milliseconds = secondsParts.length > 1 ? parseInt(secondsParts[1].padEnd(3, '0'), 10) : 0;
-
-        return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds;
-      }
-
-
-      document.getElementById('addAllToTimelineBtn').addEventListener('click', () => {
-        if (!mediaItems || mediaItems.length === 0) {
-          alert("Keine Medien zum Hinzufügen vorhanden!");
-          return;
-        }
-
-        timelineItems = []; // Bestehende Elemente entfernen
-
-        const transitions = [
-          'fade',
-          'wipeleft',
-          'slideright',
-          'circleopen',
-          'circleclose',
-          'pixelize'
-        ];
-
-        mediaItems.forEach((item, index) => {
-          timelineItems.push(item);
-
-          // Zufälligen Übergang hinzufügen, außer nach dem letzten Element
-          if (index < mediaItems.length - 1) {
-            const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
-            timelineItems.push({
-              type: 'TRANSITION',
-              transition: randomTransition,
-              duration: 1000,
-              overlap: 500
-            });
-          }
-        });
-
-        renderTimeline();
-      });
-
-      async function init() {
-        /* try {
-            const response = await fetch('/api/album');
-            if (!response.ok) {
-                throw new Error('Fehler beim Laden der Medien');
-            }
-            mediaItems = await response.json();
-    
-            mediaItems.forEach(item => {
-                ensureImageDuration(item);
-                console.log(`Media geladen:`, item); // <-- Jetzt ist item definiert
-            });
-    
-            //renderMediaList();
-    
-        } catch (error) {
-            console.error('Init-Fehler:', error);
-        }*/
-
-        initTransitions();
-        loadAlbums();
-      }
-
-
-      async function loadAlbums() {
-
-        try {
-          const response = await fetch('/api/albums');
-          if (!response.ok) throw new Error('Fehler beim Laden der Alben');
-          const albums = await response.json();
-          const albumSelect = document.getElementById('albumSelect');
-          albumSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
-          albums.forEach(album => {
-            const option = document.createElement('option');
-            option.value = album.id;
-            option.textContent = album.albumName;
-            albumSelect.appendChild(option);
-          });
-        } catch (error) {
-          console.error('Fehler beim Laden der Alben:', error);
-        }
-        //await downloadLivePhotoVideos(); // Live-Photo-Videos herunterladen
-
-      }
-
-      // Hilfsfunktion: Dateiname extrahieren
-      function getBaseName(filePath) {
-        return filePath.split('/').pop();
-      }
-
-      document.getElementById('albumSelect').addEventListener('change', async (e) => {
-        const albumId = e.target.value;
-        if (!albumId) return;
-
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        loadingIndicator.style.display = 'block';
-
-        try {
-          const response = await fetch(`/api/album?albumId=${encodeURIComponent(albumId)}`);
-          if (!response.ok) {
-            throw new Error('Fehler beim Laden des Albums');
-          }
-          const albumMedia = await response.json();
-          console.log('Gewähltes Album:', albumMedia);
-
-          mediaItems = albumMedia;
-          renderMediaList();
-          await loadVideoThumbnails(); // Hier wird loadVideoThumbnails() aufgerufen
-          document.getElementById('uploadAlbum').value = e.target.value;
-          //await downloadLivePhotoVideos();  // <-- Hier wird sichergestellt, dass die Live-Videos geladen werden
-
-        } catch (error) {
-          console.error('Fehler beim Laden des ausgewählten Albums:', error);
-        } finally {
-          loadingIndicator.style.display = 'none';
-        }
-      });
-      // Beispiel: Datei hochladen und dann zu einem Album hinzufügen
-
-      async function uploadAndAddToAlbum(filePath, albumId) {
-        try {
-          // 1. Datei hochladen
-          const uploadResult = await uploadAssetFile(filePath);
-          // Nehme an, dass uploadResult eine Eigenschaft "id" enthält.
-          const assetId = uploadResult.id;
-          console.log('Hochgeladene Asset-ID:', assetId);
-
-          // 2. Asset dem Album hinzufügen
-          const result = await addAssetsToAlbum(albumId, [assetId]);
-          console.log('Asset erfolgreich zum Album hinzugefügt:', result);
-        } catch (error) {
-          console.error('Fehler beim Hochladen und Hinzufügen:', error.message);
-        }
-      }
-
-      async function downloadLivePhotoVideos() {
-        for (const item of mediaItems) {
-          if (item.livePhotoVideoId) {
-            try {
-              const response = await fetch(`/api/livePhotoVideo?videoId=${item.livePhotoVideoId}`);
-              if (!response.ok) {
-                throw new Error(`Fehler beim Laden des Live-Photo-Videos: ${item.livePhotoVideoId}`);
-              }
-              const videoBlob = await response.blob();
-              const videoUrl = URL.createObjectURL(videoBlob);
-              item.livePhotoVideoUrl = videoUrl; // Speichere die lokale URL für das Video
-              console.log(`Live-Photo-Video geladen für ${item.downloadName}:`, videoUrl);
-            } catch (error) {
-              console.error(`Live-Photo-Video konnte nicht geladen werden: ${error.message}`);
-            }
-          }
-        }
-      }
-
-
-
-      document.getElementById('generateIntroBtn').addEventListener('click', async () => {
-        const title = document.getElementById('title').value;
-        if (!title) {
-          alert("Bitte gib einen Titel ein!");
-          return;
-        }
-        try {
-          const response = await fetch('/api/intro', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title })
-          });
-          if (!response.ok) {
-            throw new Error('Intro-Clip konnte nicht erstellt werden');
-          }
-          const data = await response.json();
-          // Neues Asset für Intro-Clip erstellen
-          const introAsset = {
-            type: 'VIDEO',
-            downloadName: getBaseName(data.file),
-            originalFileName: getBaseName(data.file),
-            duration: 5000
-          };
-          mediaItems.unshift(introAsset);
-          renderMediaList();
-        } catch (error) {
-          console.error('Fehler beim Intro-Clip:', error);
-          alert('Fehler: ' + error.message);
-        }
-      });
-
-      // Drag & Drop für Medien
-      function handleMediaDragStart(e) {
-        draggedItem = this;
-        this.classList.add('dragging');
-      }
-
-      // Drag & Drop für Transition-Items
-      function handleTransitionDragStart(e) {
-        const transitionType = e.target.dataset.transition;
-        draggedTransition = {
-          type: 'TRANSITION',
-          transition: transitionType,
-          duration: 1000,
-          overlap: 500
-        };
-        e.target.classList.add('dragging');
-      }
-
-      // Reordering in der Timeline
-      function handleTimelineDragStart(e) {
-        draggedTimelineIndex = parseInt(this.dataset.index, 10);
-        this.classList.add('dragging');
-      }
-      function handleTimelineDragOver(e) {
-        e.preventDefault();
-      }
-      function handleTimelineDrop(e) {
-        e.preventDefault();
-        if (draggedTimelineIndex !== null) {
-          const targetIndex = parseInt(this.dataset.index, 10);
-          if (targetIndex !== draggedTimelineIndex) {
-            const item = timelineItems.splice(draggedTimelineIndex, 1)[0];
-            timelineItems.splice(targetIndex, 0, item);
-            draggedTimelineIndex = null;
-            renderTimeline();
-          }
-        }
-      }
-
-      const timelineElement = document.getElementById('timeline');
-      timelineElement.addEventListener('dragover', (e) => e.preventDefault());
-      timelineElement.addEventListener('drop', (e) => {
-        e.preventDefault();
-        if (draggedItem) {
-          const index = parseInt(draggedItem.querySelector('.duration-input')?.dataset.index);
-          if (typeof index === 'number' && !timelineItems.includes(mediaItems[index])) {
-            timelineItems.push(mediaItems[index]);
-          }
-          draggedItem.classList.remove('dragging');
-          draggedItem = null;
-          renderTimeline();
-        } else if (draggedTransition) {
-          timelineItems.push(draggedTransition);
-          draggedTransition = null;
-          renderTimeline();
-        }
-      });
-
-      function initTransitions() {
-        const transitions = document.querySelectorAll('.transition-item');
-
-        transitions.forEach(t => {
-          // Drag & Drop wie gehabt
-          t.addEventListener('dragstart', handleTransitionDragStart);
-
-          // Doppelklick zum gezielten Einfügen an der aktuellen Hover-Position
-          t.addEventListener('dblclick', () => {
-            const transitionType = t.dataset.transition;
-            const newTransition = {
-              type: 'TRANSITION',
-              transition: transitionType,
-              duration: 1000,
-              overlap: 500
-            };
-
-            // Wenn ein Element in der Timeline aktuell per Hover hervorgehoben ist:
-            const hovered = document.querySelector('.timeline-item.hover');
-            if (hovered) {
-              const insertIndex = parseInt(hovered.dataset.index) + 1;
-              timelineItems.splice(insertIndex, 0, newTransition);
-            } else {
-              // Fallback: hänge es ans Ende
-              timelineItems.push(newTransition);
-            }
-
-            renderTimeline();
-          });
-        });
-      }
-
-
-      async function loadVideoThumbnails() {
-        for (const item of mediaItems) {
-          if (item.type === 'VIDEO' && !item.thumbnail) {
-            try {
-              const response = await fetch(`/api/videoThumbnail?videoName=${item.downloadName}`);
-              if (!response.ok) {
-                throw new Error(`Thumbnail konnte nicht geladen werden: ${item.downloadName}`);
-              }
-              const blob = await response.blob();
-              const thumbUrl = URL.createObjectURL(blob);
-              item.thumbnail = thumbUrl;
-              console.log(`Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
-              const img = document.querySelector(`.media-item[data-index="${mediaItems.indexOf(item)}"] img`);
-              if (img) {
-                img.src = thumbUrl;
-              }
-            } catch (error) {
-              console.error(`Fehler beim Laden des Thumbnails: ${error.message}`);
-            }
-          }
-        }
-      }
-
-      function addToTimeline(item) {
-        console.log("Medium zur Timeline hinzufügen:", item);
-
-        // Klonen des Items für die Timeline
-        const newItem = { ...item };
-
-        // Standard-Dauer für Bilder setzen
-        if (newItem.type === 'IMAGE' && (!newItem.duration || isNaN(newItem.duration))) {
-          newItem.duration = 5000; // 5 Sekunden
-        }
-
-        // In die Timeline-Liste pushen
-        timelineItems.push(newItem);
-
-        // Aktualisiere die Timeline-Ansicht
-        renderTimeline();
-      }
-
-
-
-      function renderMediaList() {
-        const container = document.getElementById('mediaList');
-        container.innerHTML = '';
-
-        mediaItems.forEach((item, index) => {
-          console.log(`Rendere Media ${index}:`, item);
-
-          const div = document.createElement('div');
-          div.className = 'media-item';
-          div.draggable = true;
-          div.dataset.index = index;
-          div.addEventListener('dragstart', handleMediaDragStart);
-
-          // 👇 Fügt das Medium zur Timeline hinzu, wenn es doppelt geklickt wird
-          div.addEventListener('dblclick', () => {
-            addToTimeline(item);
-          });
-
-          if (item.type === 'IMAGE') {
-            const img = document.createElement('img');
-            const imageFile = item.downloadName || item.originalFileName || `temp_${String(index + 1).padStart(3, '0')}.jpg`;
-            img.src = "/media/" + imageFile;
-            img.alt = imageFile;
-            img.className = 'thumb';
-            div.appendChild(img);
-          } else if (item.type === 'VIDEO') {
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'video-wrapper';
-
-            const video = document.createElement('video');
-            const videoFile = item.downloadName || item.originalFileName;
-            video.src = `/media/${videoFile}`;
-            video.className = 'video-preview';
-            video.muted = true; // Kein Ton beim Hover
-            video.loop = true;
-            video.style.width = '120px';
-            video.style.height = 'auto';
-            video.style.borderRadius = '6px';
-            video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
-
-            // Event-Listener für Maus-Hover
-            div.addEventListener('mouseenter', () => {
-              video.play();
-            });
-
-            div.addEventListener('mouseleave', () => {
-              video.pause();
-              video.currentTime = 0; // Springe zum Anfang zurück
-            });
-
-            // 🎥 Markierung für Videos
-            const badge = document.createElement('span');
-            badge.className = 'video-badge';
-            badge.innerHTML = '🎥'; // Symbol für Video-Markierung
-            videoContainer.appendChild(video);
-            videoContainer.appendChild(badge);
-            div.appendChild(videoContainer);
-          }
-
-          // Dauer-Input unter dem Bild/Video
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.className = 'duration-input';
-
-          if (!item.duration || isNaN(item.duration)) {
-            item.duration = parseDurationString(item.duration || "00:00:05.000"); // Standard: 5s
-          }
-
-          input.value = formatDuration(item.duration);
-          input.placeholder = 'HH:MM:SS';
-          input.dataset.index = index;
-          input.addEventListener('change', updateDuration);
-          div.appendChild(input);
-          container.appendChild(div);
-        });
-      }
-
-
-
-
-
-      function calculateTimelineDuration() {
-        let totalMs = timelineItems.reduce((sum, item) => {
-          if (item.type === 'IMAGE' || item.type === 'VIDEO') {
-            return sum + (typeof item.duration === 'number' ? item.duration : 0);
-          }
-          return sum;
-        }, 0);
-        return totalMs;
-      }
-
-      function formatMsToTime(ms) {
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return [
-          hours.toString().padStart(2, '0'),
-          minutes.toString().padStart(2, '0'),
-          seconds.toString().padStart(2, '0')
-        ].join(':');
-      }
-
-      function updateTimelineDuration() {
-        const durationEl = document.getElementById('timelineDuration');
-        const totalMs = calculateTimelineDuration();
-        durationEl.textContent = 'Gesamtdauer: ' + formatMsToTime(totalMs);
-      }
-
-      function renderTimeline() {
-        timelineElement.innerHTML = '';
-        timelineItems.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'timeline-item';
-          div.draggable = true;
-          div.dataset.index = index;
-          div.addEventListener('mouseenter', () => {
-            div.classList.add('hover');
-          });
-          div.addEventListener('mouseleave', () => {
-            div.classList.remove('hover');
-          });
-          if (item.type === 'IMAGE') {
-            const img = document.createElement('img');
-            const imageFile = item.downloadName || item.originalFileName || 'unbekannt.jpg';
-            img.src = "/media/" + imageFile;
-            img.className = 'thumb';
-            div.appendChild(img);
-          } else if (item.type === 'VIDEO') {
-            const videoThumb = document.createElement('img');
-            const thumbSrc = item.thumbnail || `/media/${item.downloadName}`;
-            videoThumb.src = thumbSrc;
-            videoThumb.alt = item.downloadName || 'Video';
-            videoThumb.className = 'thumb';
-            div.appendChild(videoThumb);
-            const badge = document.createElement('span');
-            badge.className = 'video-badge';
-            badge.innerText = '🎥';
-            div.style.position = 'relative';
-            div.appendChild(badge);
-
-          } else if (item.type === 'TRANSITION') {
-            div.classList.add('transition'); // Übergang bekommt spezielle Klasse
-            div.innerHTML = `<span>🔀 ${item.transition}</span>`;
-          }
-
-          const removeBtn = document.createElement('button');
-          removeBtn.textContent = 'Entfernen';
-          removeBtn.style.fontSize = '0.8rem';
-          removeBtn.style.marginLeft = 'auto';
-          removeBtn.addEventListener('click', () => {
-            timelineItems.splice(index, 1);
-            renderTimeline();
-          });
-          div.appendChild(removeBtn);
-          div.addEventListener('dragstart', handleTimelineDragStart);
-          div.addEventListener('dragover', handleTimelineDragOver);
-          div.addEventListener('drop', handleTimelineDrop);
-          timelineElement.appendChild(div);
-        });
-        updateTimelineDuration();
-        timelineMap = buildTimelineMap();
-      }
-
-
-
-      function buildTimelineMap() {
-        let time = 0;
-        const map = [];
-
-        timelineItems.forEach((item) => {
-          const start = time;
-          const duration = item.duration || 0;
-          const end = start + duration;
-
-          if (item.type !== 'TRANSITION') {
-            map.push({
-              ...item,
-              start,
-              end
-            });
-          }
-
-          time = end;
-        });
-
-        return map;
-      }
-
-      function getTransitionMarkers() {
-        let time = 0;
-        const markers = [];
-
-        for (let i = 0; i < timelineItems.length; i++) {
-          const item = timelineItems[i];
-
-          if (item.type === 'TRANSITION') {
-            markers.push({
-              time,
-              transition: item.transition || 'unknown',
-              startTime: time,
-            });
-          }
-
-          if (item.duration) {
-            time += item.duration;
-          }
-        }
-
-        return markers;
-      }
-
-      function drawTransitionMarkers(markers, totalDurationMs) {
-        const tickHeight = 30;
-        markers.forEach(marker => {
-          const x = (marker.time / totalDurationMs) * canvas.width;
-
-
-          // in drawTransitionMarkers()
-          ctx.beginPath();
-          ctx.arc(x, canvas.height - 40, 6, 0, 2 * Math.PI);
-          ctx.fillStyle = '#00e5ff';
-          ctx.fill();
-          ctx.font = '10px monospace';
-          ctx.fillText(marker.transition, x + 8, canvas.height - 42);
-
-          // Linie zeichnen
-          ctx.fillStyle = '#3498db';
-          ctx.fillRect(x, 0, 2, canvas.height - tickHeight);
-
-          // Text oben
-          ctx.save();
-          ctx.translate(x + 4, 12); // kleine Verschiebung
-          ctx.rotate(-Math.PI / 8); // leicht geneigt
-          ctx.fillStyle = '#3498db';
-          ctx.font = '12px monospace';
-          ctx.fillText(marker.transition, 0, 0);
-          ctx.restore();
-        });
-      }
-
-
-      function formatDuration(durationMs) {
-        if (!durationMs || isNaN(durationMs)) {
-          console.warn("Ungültige Dauer gefunden, setze Standardwert 5000ms.");
-          durationMs = 5000; // Fallback auf 5 Sekunden
-        }
-
-        const hours = Math.floor(durationMs / 3600000);
-        const minutes = Math.floor((durationMs % 3600000) / 60000);
-        const seconds = Math.floor((durationMs % 60000) / 1000);
-
-        return [
-          hours.toString().padStart(2, '0'),
-          minutes.toString().padStart(2, '0'),
-          seconds.toString().padStart(2, '0')
-        ].join(':');
-      }
-
-
-      function parseDuration(durationStr) {
-        const parts = durationStr.split(':');
-        if (parts.length !== 3) return NaN;
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-        const seconds = parseInt(parts[2], 10);
-        if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) return NaN;
-        return hours * 3600000 + minutes * 60000 + seconds * 1000;
-      }
-
-      function updateDuration(e) {
-        const index = e.target.dataset.index;
-        const ms = parseDuration(e.target.value);
-        if (isNaN(ms)) {
-          alert('Ungültiges Zeitformat. Bitte HH:MM:SS verwenden.');
-          e.target.value = formatDuration(mediaItems[index].duration);
-        } else {
-          mediaItems[index].duration = ms;
-        }
-      }
-
-      document.getElementById('generateTitleBtn').addEventListener('click', async () => {
-  try {
-    const albumId = document.getElementById('albumSelect').value;
-    const response = await fetch(`/api/generateTitle?albumId=${encodeURIComponent(albumId)}`);
-    if (!response.ok) throw new Error('Fehler beim Generieren der Titel');
-
-    const data = await response.json();
-    console.log("Erhaltene Titel:", data.finalTitles);
-
-    const titleSelect = document.getElementById('titleSelect');
-    titleSelect.innerHTML = "";
-
-    let allLines = [];
-
-    data.finalTitles.forEach(bigString => {
-      const lines = bigString.split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0)
-        .map(l => l.replace(/^\d+\.\s*/, ''));
-      allLines = allLines.concat(lines);
-    });
-
-    if (allLines.length === 1) {
-      // ✅ Nur ein Titel: direkt setzen, kein Dropdown
-      document.getElementById('title').value = allLines[0];
-      titleSelect.style.display = 'none';
-    } else if (allLines.length > 1) {
-      // ✅ Mehrere Titel: Dropdown anzeigen
-      allLines.forEach(line => {
-        const option = document.createElement('option');
-        option.value = line;
-        option.textContent = line;
-        titleSelect.appendChild(option);
-      });
-
-      titleSelect.style.display = 'block';
-
-      // Standardmäßig ersten Eintrag auswählen
-      document.getElementById('title').value = allLines[0];
-
-      titleSelect.addEventListener('change', (e) => {
-        document.getElementById('title').value = e.target.value;
-      });
-    } else {
-      console.warn("Keine Titel erhalten.");
-      titleSelect.style.display = 'none';
+      console.log(`Finale Dauer für ${item.downloadName || 'Unbekannt'}:`, item.duration);
     }
 
-  } catch (error) {
-    console.error('Fehler beim Titelgenerieren:', error);
-  }
-});
+
+    function parseDurationString(durationStr) {
+      if (!durationStr) return 0;
+
+      const parts = durationStr.split(':'); // Zerlegt in [hh, mm, ss.ms]
+      if (parts.length !== 3) return 0;
+
+      const hours = parseInt(parts[0], 10) || 0;
+      const minutes = parseInt(parts[1], 10) || 0;
+
+      // Sekunden + Millisekunden aufteilen
+      const secondsParts = parts[2].split('.');
+      const seconds = parseInt(secondsParts[0], 10) || 0;
+      const milliseconds = secondsParts.length > 1 ? parseInt(secondsParts[1].padEnd(3, '0'), 10) : 0;
+
+      return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds;
+    }
 
 
-      document.getElementById('exportBtn').addEventListener('click', async () => {
-        // Sicherstellen, dass die Dauer für alle Medien korrekt ist
-        timelineItems.forEach(item => {
-          if (item.type !== 'TRANSITION') {
-            ensureImageDuration(item);
-          }
-        });
+    document.getElementById('addAllToTimelineBtn').addEventListener('click', () => {
+      if (!mediaItems || mediaItems.length === 0) {
+        alert("Keine Medien zum Hinzufügen vorhanden!");
+        return;
+      }
 
-        const exportData = {
-          title: document.getElementById('title').value,
-          media: timelineItems.map(item => {
-            if (item.type === 'TRANSITION') {
-              return {
-                type: item.type,
-                transition: item.transition,
-                duration: item.duration
-              };
-            } else {
-              return {
-                type: item.type,
-                downloadName: item.downloadName,
-                duration: item.duration
-              };
-            }
-          }),
-          resolution: document.getElementById('resolution').value
-        };
-        console.log("Export-Daten:", exportData);
-        try {
-          const response = await fetch('/api/export', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(exportData)
+      timelineItems = []; // Bestehende Elemente entfernen
+
+      const transitions = [
+        'fade',
+        'wipeleft',
+        'slideright',
+        'circleopen',
+        'circleclose',
+        'pixelize'
+      ];
+
+      mediaItems.forEach((item, index) => {
+        timelineItems.push(item);
+
+        // Zufälligen Übergang hinzufügen, außer nach dem letzten Element
+        if (index < mediaItems.length - 1) {
+          const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
+          timelineItems.push({
+            type: 'TRANSITION',
+            transition: randomTransition,
+            duration: 1000,
+            overlap: 500
           });
-          if (!response.ok) throw new Error('Export fehlgeschlagen');
-          const data = await response.json();
-          const videoPlayer = document.getElementById('finalVideo');
-          const fileName = data.file.split('/').pop();
-          videoPlayer.src = '/output/' + fileName;
-          document.getElementById('videoContainer').style.display = 'block';
-        } catch (error) {
-          console.error('Export-Fehler:', error);
-          alert('Beim Exportieren ist ein Fehler aufgetreten: ' + error.message);
         }
       });
 
-      document.getElementById('uploadFinalBtn').addEventListener('click', async () => {
-        const albumId = document.getElementById('uploadAlbum').value;
-        const finalTitles = document.getElementById('title').value;
-        if (!albumId) {
-          alert("Bitte geben Sie die Album-ID ein, in das Video hochgeladen werden soll.");
-          return;
-        }
-        try {
-          const response = await fetch('/api/uploadFinal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ albumId, title: finalTitles }) // Korrekte Struktur
-          });
+      renderTimeline();
+    });
+
+    async function init() {
+      /* try {
+          const response = await fetch('/api/album');
           if (!response.ok) {
-            throw new Error('Upload fehlgeschlagen');
+              throw new Error('Fehler beim Laden der Medien');
           }
-          const data = await response.json();
-          alert('Finales Video erfolgreich hochgeladen und dem Album hinzugefügt!');
-          console.log('Upload-Ergebnis:', data);
-        } catch (error) {
-          console.error('Fehler beim finalen Video-Upload:', error);
-          alert('Fehler: ' + error.message);
+          mediaItems = await response.json();
+  
+          mediaItems.forEach(item => {
+              ensureImageDuration(item);
+              console.log(`Media geladen:`, item); // <-- Jetzt ist item definiert
+          });
+  
+          //renderMediaList();
+  
+      } catch (error) {
+          console.error('Init-Fehler:', error);
+      }*/
+
+      initTransitions();
+      loadAlbums();
+    }
+
+
+    async function loadAlbums() {
+
+      try {
+        const response = await fetch('/api/albums');
+        if (!response.ok) throw new Error('Fehler beim Laden der Alben');
+        const albums = await response.json();
+        const albumSelect = document.getElementById('albumSelect');
+        albumSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
+        albums.forEach(album => {
+          const option = document.createElement('option');
+          option.value = album.id;
+          option.textContent = album.albumName;
+          albumSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Fehler beim Laden der Alben:', error);
+      }
+      //await downloadLivePhotoVideos(); // Live-Photo-Videos herunterladen
+
+    }
+
+    // Hilfsfunktion: Dateiname extrahieren
+    function getBaseName(filePath) {
+      return filePath.split('/').pop();
+    }
+
+    document.getElementById('albumSelect').addEventListener('change', async (e) => {
+      const albumId = e.target.value;
+      if (!albumId) return;
+
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      loadingIndicator.style.display = 'block';
+
+      try {
+        const response = await fetch(`/api/album?albumId=${encodeURIComponent(albumId)}`);
+        if (!response.ok) {
+          throw new Error('Fehler beim Laden des Albums');
         }
+        const albumMedia = await response.json();
+        console.log('Gewähltes Album:', albumMedia);
+
+        mediaItems = albumMedia;
+        renderMediaList();
+        await loadVideoThumbnails(); // Hier wird loadVideoThumbnails() aufgerufen
+        document.getElementById('uploadAlbum').value = e.target.value;
+        //await downloadLivePhotoVideos();  // <-- Hier wird sichergestellt, dass die Live-Videos geladen werden
+
+      } catch (error) {
+        console.error('Fehler beim Laden des ausgewählten Albums:', error);
+      } finally {
+        loadingIndicator.style.display = 'none';
+      }
+    });
+    // Beispiel: Datei hochladen und dann zu einem Album hinzufügen
+
+    async function uploadAndAddToAlbum(filePath, albumId) {
+      try {
+        // 1. Datei hochladen
+        const uploadResult = await uploadAssetFile(filePath);
+        // Nehme an, dass uploadResult eine Eigenschaft "id" enthält.
+        const assetId = uploadResult.id;
+        console.log('Hochgeladene Asset-ID:', assetId);
+
+        // 2. Asset dem Album hinzufügen
+        const result = await addAssetsToAlbum(albumId, [assetId]);
+        console.log('Asset erfolgreich zum Album hinzugefügt:', result);
+      } catch (error) {
+        console.error('Fehler beim Hochladen und Hinzufügen:', error.message);
+      }
+    }
+
+    async function downloadLivePhotoVideos() {
+      for (const item of mediaItems) {
+        if (item.livePhotoVideoId) {
+          try {
+            const response = await fetch(`/api/livePhotoVideo?videoId=${item.livePhotoVideoId}`);
+            if (!response.ok) {
+              throw new Error(`Fehler beim Laden des Live-Photo-Videos: ${item.livePhotoVideoId}`);
+            }
+            const videoBlob = await response.blob();
+            const videoUrl = URL.createObjectURL(videoBlob);
+            item.livePhotoVideoUrl = videoUrl; // Speichere die lokale URL für das Video
+            console.log(`Live-Photo-Video geladen für ${item.downloadName}:`, videoUrl);
+          } catch (error) {
+            console.error(`Live-Photo-Video konnte nicht geladen werden: ${error.message}`);
+          }
+        }
+      }
+    }
+
+
+
+    document.getElementById('generateIntroBtn').addEventListener('click', async () => {
+      const title = document.getElementById('title').value;
+      if (!title) {
+        alert("Bitte gib einen Titel ein!");
+        return;
+      }
+      try {
+        const response = await fetch('/api/intro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        if (!response.ok) {
+          throw new Error('Intro-Clip konnte nicht erstellt werden');
+        }
+        const data = await response.json();
+        // Neues Asset für Intro-Clip erstellen
+        const introAsset = {
+          type: 'VIDEO',
+          downloadName: getBaseName(data.file),
+          originalFileName: getBaseName(data.file),
+          duration: 5000
+        };
+        mediaItems.unshift(introAsset);
+        renderMediaList();
+      } catch (error) {
+        console.error('Fehler beim Intro-Clip:', error);
+        alert('Fehler: ' + error.message);
+      }
+    });
+
+    // Drag & Drop für Medien
+    function handleMediaDragStart(e) {
+      draggedItem = this;
+      this.classList.add('dragging');
+    }
+
+    // Drag & Drop für Transition-Items
+    function handleTransitionDragStart(e) {
+      const transitionType = e.target.dataset.transition;
+      draggedTransition = {
+        type: 'TRANSITION',
+        transition: transitionType,
+        duration: 1000,
+        overlap: 500
+      };
+      e.target.classList.add('dragging');
+    }
+
+    // Reordering in der Timeline
+    function handleTimelineDragStart(e) {
+      draggedTimelineIndex = parseInt(this.dataset.index, 10);
+      this.classList.add('dragging');
+    }
+    function handleTimelineDragOver(e) {
+      e.preventDefault();
+    }
+    function handleTimelineDrop(e) {
+      e.preventDefault();
+      if (draggedTimelineIndex !== null) {
+        const targetIndex = parseInt(this.dataset.index, 10);
+        if (targetIndex !== draggedTimelineIndex) {
+          const item = timelineItems.splice(draggedTimelineIndex, 1)[0];
+          timelineItems.splice(targetIndex, 0, item);
+          draggedTimelineIndex = null;
+          renderTimeline();
+        }
+      }
+    }
+
+    const timelineElement = document.getElementById('timeline');
+    timelineElement.addEventListener('dragover', (e) => e.preventDefault());
+    timelineElement.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedItem) {
+        const index = parseInt(draggedItem.querySelector('.duration-input')?.dataset.index);
+        if (typeof index === 'number' && !timelineItems.includes(mediaItems[index])) {
+          timelineItems.push(mediaItems[index]);
+        }
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+        renderTimeline();
+      } else if (draggedTransition) {
+        timelineItems.push(draggedTransition);
+        draggedTransition = null;
+        renderTimeline();
+      }
+    });
+
+    function initTransitions() {
+      const transitions = document.querySelectorAll('.transition-item');
+
+      transitions.forEach(t => {
+        // Drag & Drop wie gehabt
+        t.addEventListener('dragstart', handleTransitionDragStart);
+
+        // Doppelklick zum gezielten Einfügen an der aktuellen Hover-Position
+        t.addEventListener('dblclick', () => {
+          const transitionType = t.dataset.transition;
+          const newTransition = {
+            type: 'TRANSITION',
+            transition: transitionType,
+            duration: 1000,
+            overlap: 500
+          };
+
+          // Wenn ein Element in der Timeline aktuell per Hover hervorgehoben ist:
+          const hovered = document.querySelector('.timeline-item.hover');
+          if (hovered) {
+            const insertIndex = parseInt(hovered.dataset.index) + 1;
+            timelineItems.splice(insertIndex, 0, newTransition);
+          } else {
+            // Fallback: hänge es ans Ende
+            timelineItems.push(newTransition);
+          }
+
+          renderTimeline();
+        });
+      });
+    }
+
+
+    async function loadVideoThumbnails() {
+      for (const item of mediaItems) {
+        if (item.type === 'VIDEO' && !item.thumbnail) {
+          try {
+            const response = await fetch(`/api/videoThumbnail?videoName=${item.downloadName}`);
+            if (!response.ok) {
+              throw new Error(`Thumbnail konnte nicht geladen werden: ${item.downloadName}`);
+            }
+            const blob = await response.blob();
+            const thumbUrl = URL.createObjectURL(blob);
+            item.thumbnail = thumbUrl;
+            console.log(`Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
+            const img = document.querySelector(`.media-item[data-index="${mediaItems.indexOf(item)}"] img`);
+            if (img) {
+              img.src = thumbUrl;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Laden des Thumbnails: ${error.message}`);
+          }
+        }
+      }
+    }
+
+    function addToTimeline(item) {
+      console.log("Medium zur Timeline hinzufügen:", item);
+
+      // Klonen des Items für die Timeline
+      const newItem = { ...item };
+
+      // Standard-Dauer für Bilder setzen
+      if (newItem.type === 'IMAGE' && (!newItem.duration || isNaN(newItem.duration))) {
+        newItem.duration = 5000; // 5 Sekunden
+      }
+
+      // In die Timeline-Liste pushen
+      timelineItems.push(newItem);
+
+      // Aktualisiere die Timeline-Ansicht
+      renderTimeline();
+    }
+
+
+
+    function renderMediaList() {
+      const container = document.getElementById('mediaList');
+      container.innerHTML = '';
+
+      mediaItems.forEach((item, index) => {
+        console.log(`Rendere Media ${index}:`, item);
+
+        const div = document.createElement('div');
+        div.className = 'media-item';
+        div.draggable = true;
+        div.dataset.index = index;
+        div.addEventListener('dragstart', handleMediaDragStart);
+
+        // 👇 Fügt das Medium zur Timeline hinzu, wenn es doppelt geklickt wird
+        div.addEventListener('dblclick', () => {
+          addToTimeline(item);
+        });
+        if (item.isLivePhoto) {
+          const badge = document.createElement('span');
+          badge.className = 'live-icon';
+          badge.innerText = 'LIVE';
+          div.appendChild(badge);
+        }
+
+        if (item.type === 'IMAGE') {
+          const img = document.createElement('img');
+          const imageFile = item.downloadName || item.originalFileName || `temp_${String(index + 1).padStart(3, '0')}.jpg`;
+          img.src = "/media/" + imageFile;
+          img.alt = imageFile;
+          img.className = 'thumb';
+          div.appendChild(img);
+        } else if (item.type === 'VIDEO') {
+          const videoContainer = document.createElement('div');
+          videoContainer.className = 'video-wrapper';
+
+          const video = document.createElement('video');
+          const videoFile = item.downloadName || item.originalFileName;
+          video.src = `/media/${videoFile}`;
+          video.className = 'video-preview';
+          video.muted = true; // Kein Ton beim Hover
+          video.loop = true;
+          video.style.width = '120px';
+          video.style.height = 'auto';
+          video.style.borderRadius = '6px';
+          video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
+
+          // Event-Listener für Maus-Hover
+          div.addEventListener('mouseenter', () => {
+            video.play();
+          });
+
+          div.addEventListener('mouseleave', () => {
+            video.pause();
+            video.currentTime = 0; // Springe zum Anfang zurück
+          });
+
+          // 🎥 Markierung für Videos
+          const badge = document.createElement('span');
+          badge.className = 'video-badge';
+          badge.innerHTML = '🎥'; // Symbol für Video-Markierung
+          videoContainer.appendChild(video);
+          videoContainer.appendChild(badge);
+          div.appendChild(videoContainer);
+        }
+
+        // Dauer-Input unter dem Bild/Video
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'duration-input';
+
+        if (!item.duration || isNaN(item.duration)) {
+          item.duration = parseDurationString(item.duration || "00:00:05.000"); // Standard: 5s
+        }
+
+        input.value = formatDuration(item.duration);
+        input.placeholder = 'HH:MM:SS';
+        input.dataset.index = index;
+        input.addEventListener('change', updateDuration);
+        div.appendChild(input);
+        container.appendChild(div);
+      });
+    }
+
+
+
+
+
+    function calculateTimelineDuration() {
+      let totalMs = timelineItems.reduce((sum, item) => {
+        if (item.type === 'IMAGE' || item.type === 'VIDEO') {
+          return sum + (typeof item.duration === 'number' ? item.duration : 0);
+        }
+        return sum;
+      }, 0);
+      return totalMs;
+    }
+
+    function formatMsToTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return [
+        hours.toString().padStart(2, '0'),
+        minutes.toString().padStart(2, '0'),
+        seconds.toString().padStart(2, '0')
+      ].join(':');
+    }
+
+    function updateTimelineDuration() {
+      const durationEl = document.getElementById('timelineDuration');
+      const totalMs = calculateTimelineDuration();
+      durationEl.textContent = 'Gesamtdauer: ' + formatMsToTime(totalMs);
+    }
+
+    function renderTimeline() {
+      timelineElement.innerHTML = '';
+      timelineItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'timeline-item';
+        div.draggable = true;
+        div.dataset.index = index;
+        div.addEventListener('mouseenter', () => {
+          div.classList.add('hover');
+        });
+        div.addEventListener('mouseleave', () => {
+          div.classList.remove('hover');
+        });
+        if (item.type === 'IMAGE') {
+          const img = document.createElement('img');
+          const imageFile = item.downloadName || item.originalFileName || 'unbekannt.jpg';
+          img.src = "/media/" + imageFile;
+          img.className = 'thumb';
+          div.appendChild(img);
+        } else if (item.type === 'VIDEO') {
+          const videoThumb = document.createElement('img');
+          const thumbSrc = item.thumbnail || `/media/${item.downloadName}`;
+          videoThumb.src = thumbSrc;
+          videoThumb.alt = item.downloadName || 'Video';
+          videoThumb.className = 'thumb';
+          div.appendChild(videoThumb);
+          const badge = document.createElement('span');
+          badge.className = 'video-badge';
+          badge.innerText = '🎥';
+          div.style.position = 'relative';
+          div.appendChild(badge);
+
+        } else if (item.type === 'TRANSITION') {
+          div.classList.add('transition'); // Übergang bekommt spezielle Klasse
+          div.innerHTML = `<span>🔀 ${item.transition}</span>`;
+        }
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Entfernen';
+        removeBtn.style.fontSize = '0.8rem';
+        removeBtn.style.marginLeft = 'auto';
+        removeBtn.addEventListener('click', () => {
+          timelineItems.splice(index, 1);
+          renderTimeline();
+        });
+        div.appendChild(removeBtn);
+        div.addEventListener('dragstart', handleTimelineDragStart);
+        div.addEventListener('dragover', handleTimelineDragOver);
+        div.addEventListener('drop', handleTimelineDrop);
+        timelineElement.appendChild(div);
+      });
+      updateTimelineDuration();
+      timelineMap = buildTimelineMap();
+    }
+
+
+
+    function buildTimelineMap() {
+      let time = 0;
+      const map = [];
+
+      timelineItems.forEach((item) => {
+        const start = time;
+        const duration = item.duration || 0;
+        const end = start + duration;
+
+        if (item.type !== 'TRANSITION') {
+          map.push({
+            ...item,
+            start,
+            end
+          });
+        }
+
+        time = end;
       });
 
-      const canvas = document.getElementById('liveCanvas');
-      const ctx = canvas.getContext('2d');
-      const previewVideo = document.getElementById('previewVideo');
-      const canvasTimeDisplay = document.getElementById('canvasTimeDisplay');
+      return map;
+    }
 
-      let timelineMap = [];
+    function getTransitionMarkers() {
+      let time = 0;
+      const markers = [];
 
-      function buildTimelineMap() {
-        let time = 0;
-        const map = [];
+      for (let i = 0; i < timelineItems.length; i++) {
+        const item = timelineItems[i];
 
-        timelineItems.forEach(item => {
-          const start = time;
-          const duration = item.duration || 0;
-          const end = start + duration;
-
-          if (item.type !== 'TRANSITION') {
-            map.push({ ...item, start, end });
-          }
-
-          time = end;
-        });
-
-        return map;
-      }
-
-      function formatTime(ms) {
-        const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return [hours, minutes, seconds].map(n => String(n).padStart(2, '0')).join(':');
-      }
-
-      function drawImageScaled(imgOrVideo) {
-        const aspect = imgOrVideo.videoWidth ? imgOrVideo.videoWidth / imgOrVideo.videoHeight : imgOrVideo.width / imgOrVideo.height;
-        const canvasAspect = canvas.width / canvas.height;
-        let drawWidth, drawHeight;
-
-        if (canvasAspect > aspect) {
-          drawHeight = canvas.height;
-          drawWidth = drawHeight * aspect;
-        } else {
-          drawWidth = canvas.width;
-          drawHeight = drawWidth / aspect;
+        if (item.type === 'TRANSITION') {
+          markers.push({
+            time,
+            transition: item.transition || 'unknown',
+            startTime: time,
+          });
         }
 
-        const offsetX = (canvas.width - drawWidth) / 2;
-        const offsetY = (canvas.height - drawHeight) / 2;
-
-        ctx.drawImage(imgOrVideo, offsetX, offsetY, drawWidth, drawHeight);
+        if (item.duration) {
+          time += item.duration;
+        }
       }
 
-      function showPreviewAt(x) {
-  if (!timelineMap.length) return;
+      return markers;
+    }
 
-  const totalDuration = timelineMap.at(-1)?.end || 0;
-  const timeInMs = (x / canvas.width) * totalDuration;
-  const formattedTime = formatTime(timeInMs);
-  canvasTimeDisplay.textContent = formattedTime;
-
-  const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
-  if (!current) return;
-
-  const offset = timeInMs - current.start;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawTimeTicks(totalDuration);
-  drawTransitionMarkers(getTransitionMarkers(), totalDuration);
-
-  // Marker zeichnen
-  ctx.fillStyle = 'red';
-  ctx.fillRect(x, 0, 2, canvas.height - 30);
-
-  const previewBox = document.getElementById('hoverPreviewBox');
-  const previewImg = document.getElementById('hoverPreviewImage');
-  previewBox.style.display = 'block';
-
-  if (current.type === 'IMAGE') {
-    // Einfaches Bild anzeigen
-    previewImg.src = `/media/${current.downloadName}`;
-    previewImg.style.display = 'block';
-  } else if (current.type === 'VIDEO') {
-    // Video vorbereiten und ein Frame ziehen
-    const tempVideo = document.createElement('video');
-    tempVideo.src = `/media/${current.downloadName}`;
-    tempVideo.muted = true;
-    tempVideo.currentTime = offset / 1000;
-
-    tempVideo.addEventListener('seeked', () => {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = tempVideo.videoWidth;
-      tempCanvas.height = tempVideo.videoHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-      previewImg.src = tempCanvas.toDataURL('image/jpeg');
-      previewImg.style.display = 'block';
-    }, { once: true });
-  }
-}
+    function drawTransitionMarkers(markers, totalDurationMs) {
+      const tickHeight = 30;
+      markers.forEach(marker => {
+        const x = (marker.time / totalDurationMs) * canvas.width;
 
 
+        // in drawTransitionMarkers()
+        ctx.beginPath();
+        ctx.arc(x, canvas.height - 40, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#00e5ff';
+        ctx.fill();
+        ctx.font = '10px monospace';
+        ctx.fillText(marker.transition, x + 8, canvas.height - 42);
 
+        // Linie zeichnen
+        ctx.fillStyle = '#3498db';
+        ctx.fillRect(x, 0, 2, canvas.height - tickHeight);
 
-      function drawTimeTicks(totalDurationMs) {
-        const totalSeconds = Math.ceil(totalDurationMs / 1000);
-        const spacing = canvas.width / totalSeconds;
-        const tickHeight = 30;
-
-        // Skalenbereich einfärben
-        ctx.fillStyle = '#000'; // dunkler Balken unten
-        ctx.fillRect(0, canvas.height - tickHeight, canvas.width, tickHeight);
-
-        ctx.fillStyle = '#ccc';
+        // Text oben
+        ctx.save();
+        ctx.translate(x + 4, 12); // kleine Verschiebung
+        ctx.rotate(-Math.PI / 8); // leicht geneigt
+        ctx.fillStyle = '#3498db';
         ctx.font = '12px monospace';
-        ctx.textAlign = 'center';
+        ctx.fillText(marker.transition, 0, 0);
+        ctx.restore();
+      });
+    }
 
-        for (let i = 0; i <= totalSeconds; i++) {
-          const x = i * spacing;
-          ctx.fillRect(x, canvas.height - tickHeight, 1, 8); // kleiner Tick
-          ctx.fillText(formatTime(i * 1000), x, canvas.height - 10); // zentriert oben im Tick-Bereich
-        }
+
+    function formatDuration(durationMs) {
+      if (!durationMs || isNaN(durationMs)) {
+        console.warn("Ungültige Dauer gefunden, setze Standardwert 5000ms.");
+        durationMs = 5000; // Fallback auf 5 Sekunden
       }
 
+      const hours = Math.floor(durationMs / 3600000);
+      const minutes = Math.floor((durationMs % 3600000) / 60000);
+      const seconds = Math.floor((durationMs % 60000) / 1000);
+
+      return [
+        hours.toString().padStart(2, '0'),
+        minutes.toString().padStart(2, '0'),
+        seconds.toString().padStart(2, '0')
+      ].join(':');
+    }
 
 
-      canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        showPreviewAt(x);
-      });
+    function parseDuration(durationStr) {
+      const parts = durationStr.split(':');
+      if (parts.length !== 3) return NaN;
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      const seconds = parseInt(parts[2], 10);
+      if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) return NaN;
+      return hours * 3600000 + minutes * 60000 + seconds * 1000;
+    }
 
-      previewVideo.addEventListener('seeked', () => {
-        requestAnimationFrame(() => {
-          drawImageScaled(previewVideo);
+    function updateDuration(e) {
+      const index = e.target.dataset.index;
+      const ms = parseDuration(e.target.value);
+      if (isNaN(ms)) {
+        alert('Ungültiges Zeitformat. Bitte HH:MM:SS verwenden.');
+        e.target.value = formatDuration(mediaItems[index].duration);
+      } else {
+        mediaItems[index].duration = ms;
+      }
+    }
+
+    document.getElementById('generateTitleBtn').addEventListener('click', async () => {
+      try {
+        const albumId = document.getElementById('albumSelect').value;
+        const response = await fetch(`/api/generateTitle?albumId=${encodeURIComponent(albumId)}`);
+        if (!response.ok) throw new Error('Fehler beim Generieren der Titel');
+
+        const data = await response.json();
+        console.log("Erhaltene Titel:", data.finalTitles);
+
+        const titleSelect = document.getElementById('titleSelect');
+        titleSelect.innerHTML = "";
+
+        let allLines = [];
+
+        data.finalTitles.forEach(bigString => {
+          const lines = bigString.split('\n')
+            .map(l => l.trim())
+            .filter(l => l.length > 0)
+            .map(l => l.replace(/^\d+\.\s*/, ''));
+          allLines = allLines.concat(lines);
         });
+
+        if (allLines.length === 1) {
+          // ✅ Nur ein Titel: direkt setzen, kein Dropdown
+          document.getElementById('title').value = allLines[0];
+          titleSelect.style.display = 'none';
+        } else if (allLines.length > 1) {
+          // ✅ Mehrere Titel: Dropdown anzeigen
+          allLines.forEach(line => {
+            const option = document.createElement('option');
+            option.value = line;
+            option.textContent = line;
+            titleSelect.appendChild(option);
+          });
+
+          titleSelect.style.display = 'block';
+
+          // Standardmäßig ersten Eintrag auswählen
+          document.getElementById('title').value = allLines[0];
+
+          titleSelect.addEventListener('change', (e) => {
+            document.getElementById('title').value = e.target.value;
+          });
+        } else {
+          console.warn("Keine Titel erhalten.");
+          titleSelect.style.display = 'none';
+        }
+
+      } catch (error) {
+        console.error('Fehler beim Titelgenerieren:', error);
+      }
+    });
+
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      // Sicherstellen, dass die Dauer für alle Medien korrekt ist
+      timelineItems.forEach(item => {
+        if (item.type !== 'TRANSITION') {
+          ensureImageDuration(item);
+        }
       });
 
+      const exportData = {
+        title: document.getElementById('title').value,
+        media: timelineItems.map(item => {
+          if (item.type === 'TRANSITION') {
+            return {
+              type: item.type,
+              transition: item.transition,
+              duration: item.duration
+            };
+          } else {
+            return {
+              type: item.type,
+              downloadName: item.downloadName,
+              duration: item.duration
+            };
+          }
+        }),
+        resolution: document.getElementById('resolution').value
+      };
+      console.log("Export-Daten:", exportData);
+      try {
+        const response = await fetch('/api/export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(exportData)
+        });
+        if (!response.ok) throw new Error('Export fehlgeschlagen');
+        const data = await response.json();
+        const videoPlayer = document.getElementById('finalVideo');
+        const fileName = data.file.split('/').pop();
+        videoPlayer.src = '/output/' + fileName;
+        document.getElementById('videoContainer').style.display = 'block';
+      } catch (error) {
+        console.error('Export-Fehler:', error);
+        alert('Beim Exportieren ist ein Fehler aufgetreten: ' + error.message);
+      }
+    });
+
+    document.getElementById('uploadFinalBtn').addEventListener('click', async () => {
+      const albumId = document.getElementById('uploadAlbum').value;
+      const finalTitles = document.getElementById('title').value;
+      if (!albumId) {
+        alert("Bitte geben Sie die Album-ID ein, in das Video hochgeladen werden soll.");
+        return;
+      }
+      try {
+        const response = await fetch('/api/uploadFinal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, title: finalTitles }) // Korrekte Struktur
+        });
+        if (!response.ok) {
+          throw new Error('Upload fehlgeschlagen');
+        }
+        const data = await response.json();
+        alert('Finales Video erfolgreich hochgeladen und dem Album hinzugefügt!');
+        console.log('Upload-Ergebnis:', data);
+      } catch (error) {
+        console.error('Fehler beim finalen Video-Upload:', error);
+        alert('Fehler: ' + error.message);
+      }
+    });
+
+    const canvas = document.getElementById('liveCanvas');
+    const ctx = canvas.getContext('2d');
+    const previewVideo = document.getElementById('previewVideo');
+    const canvasTimeDisplay = document.getElementById('canvasTimeDisplay');
+
+    let timelineMap = [];
+
+    function buildTimelineMap() {
+      let time = 0;
+      const map = [];
+
+      timelineItems.forEach(item => {
+        const start = time;
+        const duration = item.duration || 0;
+        const end = start + duration;
+
+        if (item.type !== 'TRANSITION') {
+          map.push({ ...item, start, end });
+        }
+
+        time = end;
+      });
+
+      return map;
+    }
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return [hours, minutes, seconds].map(n => String(n).padStart(2, '0')).join(':');
+    }
+
+    function drawImageScaled(imgOrVideo) {
+      const aspect = imgOrVideo.videoWidth ? imgOrVideo.videoWidth / imgOrVideo.videoHeight : imgOrVideo.width / imgOrVideo.height;
+      const canvasAspect = canvas.width / canvas.height;
+      let drawWidth, drawHeight;
+
+      if (canvasAspect > aspect) {
+        drawHeight = canvas.height;
+        drawWidth = drawHeight * aspect;
+      } else {
+        drawWidth = canvas.width;
+        drawHeight = drawWidth / aspect;
+      }
+
+      const offsetX = (canvas.width - drawWidth) / 2;
+      const offsetY = (canvas.height - drawHeight) / 2;
+
+      ctx.drawImage(imgOrVideo, offsetX, offsetY, drawWidth, drawHeight);
+    }
+
+    function showPreviewAt(x) {
+      if (!timelineMap.length) return;
+
+      const totalDuration = timelineMap.at(-1)?.end || 0;
+      const timeInMs = (x / canvas.width) * totalDuration;
+      const formattedTime = formatTime(timeInMs);
+      canvasTimeDisplay.textContent = formattedTime;
+
+      const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
+      if (!current) return;
+
+      const offset = timeInMs - current.start;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTimeTicks(totalDuration);
+      drawTransitionMarkers(getTransitionMarkers(), totalDuration);
+
+      // Marker zeichnen
+      ctx.fillStyle = 'red';
+      ctx.fillRect(x, 0, 2, canvas.height - 30);
+
+      const previewBox = document.getElementById('hoverPreviewBox');
+      const previewImg = document.getElementById('hoverPreviewImage');
+      previewBox.style.display = 'block';
+
+      if (current.type === 'IMAGE') {
+        // Einfaches Bild anzeigen
+        previewImg.src = `/media/${current.downloadName}`;
+        previewImg.style.display = 'block';
+      } else if (current.type === 'VIDEO') {
+        // Video vorbereiten und ein Frame ziehen
+        const tempVideo = document.createElement('video');
+        tempVideo.src = `/media/${current.downloadName}`;
+        tempVideo.muted = true;
+        tempVideo.currentTime = offset / 1000;
+
+        tempVideo.addEventListener('seeked', () => {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = tempVideo.videoWidth;
+          tempCanvas.height = tempVideo.videoHeight;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+          previewImg.src = tempCanvas.toDataURL('image/jpeg');
+          previewImg.style.display = 'block';
+        }, { once: true });
+      }
+    }
 
 
 
-      init();
-    </script>
+
+    function drawTimeTicks(totalDurationMs) {
+      const totalSeconds = Math.ceil(totalDurationMs / 1000);
+      const spacing = canvas.width / totalSeconds;
+      const tickHeight = 30;
+
+      // Skalenbereich einfärben
+      ctx.fillStyle = '#000'; // dunkler Balken unten
+      ctx.fillRect(0, canvas.height - tickHeight, canvas.width, tickHeight);
+
+      ctx.fillStyle = '#ccc';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+
+      for (let i = 0; i <= totalSeconds; i++) {
+        const x = i * spacing;
+        ctx.fillRect(x, canvas.height - tickHeight, 1, 8); // kleiner Tick
+        ctx.fillText(formatTime(i * 1000), x, canvas.height - 10); // zentriert oben im Tick-Bereich
+      }
+    }
+
+
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      showPreviewAt(x);
+    });
+
+    previewVideo.addEventListener('seeked', () => {
+      requestAnimationFrame(() => {
+        drawImageScaled(previewVideo);
+      });
+    });
+
+
+
+
+    init();
+  </script>
 </body>
 
 </html>
