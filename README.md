@@ -8,7 +8,7 @@
 The Immich Video Editor is a web application for automatically creating videos from images, clips, and audio files – directly from your Immich server.
 Media can be easily arranged in an intuitive drag-and-drop timeline.
 
-![Demo GIF](./docs/demo.gif)
+![Demo GIF](./demo.gif)
 ![Timeline Screenshot](./docs/timeline.png)
 
 ## ✨ Features

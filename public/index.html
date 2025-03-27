@@ -2,6 +2,8 @@
 <html lang="de">
 
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
   <meta charset="UTF-8">
   <title>Video Editor</title>
   <style>
@@ -298,6 +300,8 @@
     }
 
     .transition-list {
+      align-items: center;
+      justify-content: center;
       display: flex;
       gap: 10px;
       margin: 10px 20px 20px 20px;
@@ -305,7 +309,21 @@
       align-items: center;
     }
 
+    .transition-item i {
+      font-size: 1.4em;
+      color: #00e5ff;
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .transition-item:hover i {
+      transform: scale(1.2);
+      color: #ffffff;
+    }
+
     .transition-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: var(--card-bg);
       padding: 8px 12px;
       border-radius: 4px;
@@ -450,12 +468,19 @@
       <!-- Transition-Liste -->
       <h3>Übergänge</h3>
       <div id="transitionList" class="transition-list">
-        <div class="transition-item" draggable="true" data-transition="fade">Fade</div>
-        <div class="transition-item" draggable="true" data-transition="wipeleft">Wipe Left</div>
-        <div class="transition-item" draggable="true" data-transition="slideright">Slide Right</div>
-        <div class="transition-item" draggable="true" data-transition="circleopen">Circle Open</div>
-        <div class="transition-item" draggable="true" data-transition="circleclose">Circle Close</div>
-        <div class="transition-item" draggable="true" data-transition="pixelize">Pixelize</div>
+        <div class="transition-item" draggable="true" data-transition="fade" title="Fade"><i class="fas fa-adjust"></i>
+        </div>
+        <div class="transition-item" draggable="true" data-transition="wipeleft" title="Wipe Left"><i
+            class="fas fa-arrow-left"></i></div>
+        <div class="transition-item" draggable="true" data-transition="slideright" title="Slide Right"><i
+            class="fas fa-arrow-right"></i></div>
+        <div class="transition-item" draggable="true" data-transition="circleopen" title="Circle Open"><i
+            class="far fa-circle"></i></div>
+        <div class="transition-item" draggable="true" data-transition="circleclose" title="Circle Close"><i
+            class="fas fa-circle"></i></div>
+        <div class="transition-item" draggable="true" data-transition="pixelize" title="Pixelize"><i
+            class="fas fa-th"></i></div>
+
       </div>
       <div class="timeline" id="timeline"></div>
       <div class="form-group">
@@ -864,45 +889,45 @@
           img.className = 'thumb';
           div.appendChild(img);
         } else if (item.type === 'VIDEO') {
-  const videoContainer = document.createElement('div');
-  videoContainer.className = 'video-wrapper';
+          const videoContainer = document.createElement('div');
+          videoContainer.className = 'video-wrapper';
 
-  const video = document.createElement('video');
-  const videoFile = item.downloadName || item.originalFileName;
-  video.src = `/media/${videoFile}`;
-  video.className = 'video-preview';
-  video.muted = true;
-  video.loop = true;
-  video.style.width = '120px';
-  video.style.height = 'auto';
-  video.style.borderRadius = '6px';
-  video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
+          const video = document.createElement('video');
+          const videoFile = item.downloadName || item.originalFileName;
+          video.src = `/media/${videoFile}`;
+          video.className = 'video-preview';
+          video.muted = true;
+          video.loop = true;
+          video.style.width = '120px';
+          video.style.height = 'auto';
+          video.style.borderRadius = '6px';
+          video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
 
-  videoContainer.appendChild(video);
+          videoContainer.appendChild(video);
 
-  // 🎥 Markierung für Videos
-  const badge = document.createElement('span');
-  badge.className = 'video-badge';
-  badge.innerHTML = '🎥';
-  videoContainer.appendChild(badge);
+          // 🎥 Markierung für Videos
+          const badge = document.createElement('span');
+          badge.className = 'video-badge';
+          badge.innerHTML = '🎥';
+          videoContainer.appendChild(badge);
 
-  // 🟥 LIVE-Badge, wenn isLivePhoto gesetzt ist
-  if (item.isLivePhoto) {
-    const liveBadge = document.createElement('span');
-    liveBadge.className = 'live-icon';
-    liveBadge.innerText = 'LIVE';
-    videoContainer.appendChild(liveBadge);
-  }
+          // 🟥 LIVE-Badge, wenn isLivePhoto gesetzt ist
+          if (item.isLivePhoto) {
+            const liveBadge = document.createElement('span');
+            liveBadge.className = 'live-icon';
+            liveBadge.innerText = 'LIVE';
+            videoContainer.appendChild(liveBadge);
+          }
 
-  // Hover-Effekt
-  div.addEventListener('mouseenter', () => video.play());
-  div.addEventListener('mouseleave', () => {
-    video.pause();
-    video.currentTime = 0;
-  });
+          // Hover-Effekt
+          div.addEventListener('mouseenter', () => video.play());
+          div.addEventListener('mouseleave', () => {
+            video.pause();
+            video.currentTime = 0;
+          });
 
-  div.appendChild(videoContainer);
-}
+          div.appendChild(videoContainer);
+        }
 
         // Dauer-Input unter dem Bild/Video
         const input = document.createElement('input');
@@ -987,13 +1012,28 @@
           div.appendChild(badge);
 
         } else if (item.type === 'TRANSITION') {
-          div.classList.add('transition'); // Übergang bekommt spezielle Klasse
-          div.innerHTML = `<span>🔀 ${item.transition}</span>`;
+          div.classList.add('transition');
+
+          const transitionIcons = {
+            fade: '<i class="fas fa-adjust"></i>',            // Halbkreis
+            wipeleft: '<i class="fas fa-arrow-left"></i>',
+            slideright: '<i class="fas fa-arrow-right"></i>',
+            circleopen: '<i class="far fa-circle"></i>',       // Offener Kreis
+            circleclose: '<i class="fas fa-circle"></i>',      // Gefüllter Kreis
+            pixelize: '<i class="fas fa-th"></i>'              // Pixel/Grid-Ansicht
+          };
+          div.title = item.transition;
+
+          const icon = transitionIcons[item.transition] || '🔁';
+
+          div.innerHTML = `<span style="font-size: 1.4em;">${icon}</span>`;
         }
 
+
         const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Entfernen';
+        removeBtn.textContent = 'X';
         removeBtn.style.fontSize = '0.8rem';
+        removeBtn.style.color = 'red';
         removeBtn.style.marginLeft = 'auto';
         removeBtn.addEventListener('click', () => {
           timelineItems.splice(index, 1);
@@ -1189,46 +1229,46 @@
       });
 
       const exportData = {
-  title: document.getElementById('title').value,
-  media: timelineItems.flatMap(item => {
-    if (item.type === 'TRANSITION') {
-      return [{
-        type: item.type,
-        transition: item.transition,
-        duration: item.duration
-      }];
-    }
+        title: document.getElementById('title').value,
+        media: timelineItems.flatMap(item => {
+          if (item.type === 'TRANSITION') {
+            return [{
+              type: item.type,
+              transition: item.transition,
+              duration: item.duration
+            }];
+          }
 
-    // Live-Video mit kurzer Dauer doppelt einfügen
-    if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
-      return [
-        {
-          type: item.type,
-          downloadName: item.downloadName,
-          duration: item.duration
-        },
-        {
-          type: item.type,
-          downloadName: item.downloadName,
-          duration: item.duration
-        },
-        {
-          type: item.type,
-          downloadName: item.downloadName,
-          duration: item.duration
-        }
-      ];
-    }
+          // Live-Video mit kurzer Dauer doppelt einfügen
+          if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
+            return [
+              {
+                type: item.type,
+                downloadName: item.downloadName,
+                duration: item.duration
+              },
+              {
+                type: item.type,
+                downloadName: item.downloadName,
+                duration: item.duration
+              },
+              {
+                type: item.type,
+                downloadName: item.downloadName,
+                duration: item.duration
+              }
+            ];
+          }
 
-    // Normales Media-Element
-    return [{
-      type: item.type,
-      downloadName: item.downloadName,
-      duration: item.duration
-    }];
-  }),
-  resolution: document.getElementById('resolution').value
-};
+          // Normales Media-Element
+          return [{
+            type: item.type,
+            downloadName: item.downloadName,
+            duration: item.duration
+          }];
+        }),
+        resolution: document.getElementById('resolution').value
+      };
       console.log("Export-Daten:", exportData);
       try {
         const response = await fetch('/api/export', {
