@@ -394,47 +394,57 @@
 
 <body>
   <div class="container">
-    <!-- Sidebar -->
+    <!-- Sidebar (Neu strukturiert) -->
     <div class="sidebar">
-      <h2>Einstellungen</h2>
+      <h2>Menü</h2>
 
-      <!-- Album-Auswahl -->
+      <!-- 🔹 Albumverwaltung -->
+      <h3>Album</h3>
       <div class="form-group">
-        <label for="albumSelect">Album auswählen</label>
+        <label for="albumSelect">1. Album auswählen</label>
         <select id="albumSelect">
           <option value="">-- Bitte wählen --</option>
         </select>
       </div>
-      <button id="addAllToTimelineBtn">
-        Alle Medien mit Zufallsübergängen hinzufügen
-      </button>
-      <!-- Upload-Album -->
       <div class="form-group">
-        <label for="uploadAlbum">Album-ID für Upload:</label>
+        <label for="uploadAlbum">Album-ID für Upload</label>
         <input type="text" id="uploadAlbum" placeholder="Album-ID">
       </div>
-      <button id="uploadFinalBtn">Finales Video hochladen</button>
 
+      <!-- 🔹 Medien & Timeline -->
+      <h3>Medien</h3>
+      <div class="form-group">
+        <button id="addAllToTimelineBtn" style="width:100%">Alle mit Zufallsü. hinzufügen</button>
+        <button id="addAllNoTransitionBtn"> Alle Medien hinzufügen </button>
+      </div>
+
+
+      <!-- 🔹 Titel & Intro -->
+      <h3>Videotitel</h3>
       <div class="form-group">
         <label for="title">Titel</label>
         <input type="text" id="title" class="form-control" value="Generierter Titel">
-        <!-- Container für Titelvorschläge -->
         <select id="titleSelect" style="display:none; margin-top: 10px;"></select>
       </div>
-      <button id="generateTitleBtn">Titel generieren</button>
-      <button id="generateIntroBtn">Intro Clip generieren</button>
+      <div class="form-group">
+        <button id="generateTitleBtn" style="width:100%">Titel generieren</button>
+        <button id="generateIntroBtn" style="width:100%">Intro Clip generieren</button>
+      </div>
 
-
+      <!-- 🔹 Export -->
+      <h3>Export</h3>
 
       <div class="form-group">
-        <h3>Export Einstellungen</h3>
+        <button id="exportBtn" class="btn-primary" style="width:100%">Export starten</button>
+        <button id="uploadFinalBtn" style="width:100%">Finales Video hochladen</button>
+      </div>
+      <div class="form-group">
         <label for="resolution">Auflösung</label>
         <select id="resolution">
           <option value="1080p">1920x1080</option>
           <option value="720p">1280x720</option>
         </select>
       </div>
-      <button id="exportBtn" class="btn-primary">Export starten</button>
     </div>
 
     <!-- Preview-Bereich -->
@@ -544,6 +554,21 @@
 
       return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds;
     }
+
+    document.getElementById('addAllNoTransitionBtn').addEventListener('click', () => {
+      if (!mediaItems || mediaItems.length === 0) {
+        alert("Keine Medien zum Hinzufügen vorhanden!");
+        return;
+      }
+
+      timelineItems = []; // Bestehende Timeline leeren
+
+      mediaItems.forEach((item) => {
+        timelineItems.push(item);
+      });
+
+      renderTimeline();
+    });
 
 
     document.getElementById('addAllToTimelineBtn').addEventListener('click', () => {
