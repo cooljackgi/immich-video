@@ -270,12 +270,15 @@
       position: absolute;
       top: 5px;
       right: 5px;
-      background: rgba(255, 0, 0, 0.8);
+      background: rgba(255, 0, 0, 0.85);
       color: white;
       font-size: 12px;
       padding: 3px 6px;
       border-radius: 5px;
       font-weight: bold;
+      z-index: 10;
+      display: block;
+      /* <- immer sichtbar */
     }
 
     .live-preview {
@@ -851,12 +854,7 @@
         div.addEventListener('dblclick', () => {
           addToTimeline(item);
         });
-        if (item.isLivePhoto) {
-          const badge = document.createElement('span');
-          badge.className = 'live-icon';
-          badge.innerText = 'LIVE';
-          div.appendChild(badge);
-        }
+
 
         if (item.type === 'IMAGE') {
           const img = document.createElement('img');
@@ -866,38 +864,45 @@
           img.className = 'thumb';
           div.appendChild(img);
         } else if (item.type === 'VIDEO') {
-          const videoContainer = document.createElement('div');
-          videoContainer.className = 'video-wrapper';
+  const videoContainer = document.createElement('div');
+  videoContainer.className = 'video-wrapper';
 
-          const video = document.createElement('video');
-          const videoFile = item.downloadName || item.originalFileName;
-          video.src = `/media/${videoFile}`;
-          video.className = 'video-preview';
-          video.muted = true; // Kein Ton beim Hover
-          video.loop = true;
-          video.style.width = '120px';
-          video.style.height = 'auto';
-          video.style.borderRadius = '6px';
-          video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
+  const video = document.createElement('video');
+  const videoFile = item.downloadName || item.originalFileName;
+  video.src = `/media/${videoFile}`;
+  video.className = 'video-preview';
+  video.muted = true;
+  video.loop = true;
+  video.style.width = '120px';
+  video.style.height = 'auto';
+  video.style.borderRadius = '6px';
+  video.style.boxShadow = '0 0 6px rgba(0, 0, 0, 0.3)';
 
-          // Event-Listener für Maus-Hover
-          div.addEventListener('mouseenter', () => {
-            video.play();
-          });
+  videoContainer.appendChild(video);
 
-          div.addEventListener('mouseleave', () => {
-            video.pause();
-            video.currentTime = 0; // Springe zum Anfang zurück
-          });
+  // 🎥 Markierung für Videos
+  const badge = document.createElement('span');
+  badge.className = 'video-badge';
+  badge.innerHTML = '🎥';
+  videoContainer.appendChild(badge);
 
-          // 🎥 Markierung für Videos
-          const badge = document.createElement('span');
-          badge.className = 'video-badge';
-          badge.innerHTML = '🎥'; // Symbol für Video-Markierung
-          videoContainer.appendChild(video);
-          videoContainer.appendChild(badge);
-          div.appendChild(videoContainer);
-        }
+  // 🟥 LIVE-Badge, wenn isLivePhoto gesetzt ist
+  if (item.isLivePhoto) {
+    const liveBadge = document.createElement('span');
+    liveBadge.className = 'live-icon';
+    liveBadge.innerText = 'LIVE';
+    videoContainer.appendChild(liveBadge);
+  }
+
+  // Hover-Effekt
+  div.addEventListener('mouseenter', () => video.play());
+  div.addEventListener('mouseleave', () => {
+    video.pause();
+    video.currentTime = 0;
+  });
+
+  div.appendChild(videoContainer);
+}
 
         // Dauer-Input unter dem Bild/Video
         const input = document.createElement('input');
@@ -1184,24 +1189,46 @@
       });
 
       const exportData = {
-        title: document.getElementById('title').value,
-        media: timelineItems.map(item => {
-          if (item.type === 'TRANSITION') {
-            return {
-              type: item.type,
-              transition: item.transition,
-              duration: item.duration
-            };
-          } else {
-            return {
-              type: item.type,
-              downloadName: item.downloadName,
-              duration: item.duration
-            };
-          }
-        }),
-        resolution: document.getElementById('resolution').value
-      };
+  title: document.getElementById('title').value,
+  media: timelineItems.flatMap(item => {
+    if (item.type === 'TRANSITION') {
+      return [{
+        type: item.type,
+        transition: item.transition,
+        duration: item.duration
+      }];
+    }
+
+    // Live-Video mit kurzer Dauer doppelt einfügen
+    if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
+      return [
+        {
+          type: item.type,
+          downloadName: item.downloadName,
+          duration: item.duration
+        },
+        {
+          type: item.type,
+          downloadName: item.downloadName,
+          duration: item.duration
+        },
+        {
+          type: item.type,
+          downloadName: item.downloadName,
+          duration: item.duration
+        }
+      ];
+    }
+
+    // Normales Media-Element
+    return [{
+      type: item.type,
+      downloadName: item.downloadName,
+      duration: item.duration
+    }];
+  }),
+  resolution: document.getElementById('resolution').value
+};
       console.log("Export-Daten:", exportData);
       try {
         const response = await fetch('/api/export', {

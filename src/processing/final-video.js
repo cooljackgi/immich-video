@@ -208,6 +208,8 @@ function cleanAllMediaFiles() {
 
 function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = []) {
   const inputArgs = mediaFiles.map(file => `-i "${file.clipOutput}"`).join(' ');
+  const hasTransitions = Array.isArray(transitions) && transitions.length > 0;
+
   const filterParts = [];
   const audioParts = [];
   let videoOut = '';
@@ -219,6 +221,20 @@ function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = [
     fs.copyFileSync(mediaFiles[0].clipOutput, outputPath);
     return;
   }
+
+  if (!hasTransitions) {
+    // 🟢 Kein Übergang – einfacher concat!
+    const concatListPath = path.join(__dirname, '../../temp/concat_list.txt');
+    const concatList = mediaFiles.map(f => `file '${f.clipOutput}'`).join('\n');
+    fs.writeFileSync(concatListPath, concatList);
+  
+    const ffmpegConcatCmd = `ffmpeg -f concat -safe 0 -i "${concatListPath}" -vsync 2 -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 192k -y "${outputPath}"`;
+    console.log('[createFinalVideoWithTransitions] FFmpeg Concat (ohne Übergänge):\n' + ffmpegConcatCmd);
+    execSync(ffmpegConcatCmd, { stdio: 'inherit' });
+  
+    return;
+  }
+  
 
   for (let i = 0; i < mediaFiles.length - 1; i++) {
     const inputA = i === 0 ? `[${i}:v]` : `[v${i}]`;

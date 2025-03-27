@@ -111,6 +111,19 @@ app.get('/api/generateTitle', async (req, res) => {
     }
 });
 
+
+const { execSync } = require('child_process');
+
+function getDurationInMs(filePath) {
+  try {
+    const output = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`);
+    return Math.round(parseFloat(output.toString().trim()) * 1000);
+  } catch (err) {
+    console.warn(`⚠️ Konnte Dauer für ${filePath} nicht ermitteln. Fallback auf 3000ms.`);
+    return 3000;
+  }
+}
+
 app.get('/api/album', async (req, res) => {
     try {
         const albumId = req.query.albumId;
@@ -141,18 +154,21 @@ app.get('/api/album', async (req, res) => {
                   await downloadLivePhotoVideo(asset.livePhotoVideoId, liveVideoPath);
                 }
               
-                // 🎬 Neues Media-Objekt für das Live-Video
+                // 🧠 Dauer aus dem echten Video auslesen
+                const realDuration = getDurationInMs(liveVideoPath);
+              
                 const liveAsset = {
                   type: 'VIDEO',
                   downloadName: liveVideoFileName,
                   originalFileName: liveVideoFileName,
-                  duration: 3000, // Optional: Standardwert (z.B. 3s)
+                  duration: realDuration,
                   isLivePhoto: true,
-                  sourceImageId: asset.id // optional zur Verknüpfung
+                  sourceImageId: asset.id
                 };
               
-                album.assets.push(liveAsset); // ✅ füge Live-Video als separates Asset hinzu
+                album.assets.push(liveAsset);
               }
+              
               
 
         }));
