@@ -90,19 +90,29 @@
       overflow-y: auto;
     }
 
+    #previewFrame {
+  display: block;
+  max-width: 600px;
+  max-height: 340px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
 
     #hoverPreviewBox {
-  position: absolute;
-  top: 100px; /* oder weiter runter, je nach Geschmack */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: auto;
-  pointer-events: none; /* damit man durchklicken kann */
-}
+      position: absolute;
+      bottom: 40px;
+      /* oder top: -320px, je nachdem */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
 
     #hoverPreviewImage,
     #hoverPreviewVideo {
@@ -399,6 +409,24 @@
         transform: rotate(360deg);
       }
     }
+
+
+    .preview-block {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      z-index: 5;
+    }
+
+    #previewVideo {
+      display: block;
+      max-width: 600px;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
   </style>
 </head>
 
@@ -457,25 +485,26 @@
       </div>
     </div>
 
-    <!-- Preview-Bereich -->
     <div class="preview">
       <!-- Zeitstrahl-Anzeige -->
       <div id="timelineDuration">Gesamtdauer: 00:00:00</div>
 
-
-      <div style="text-align: center; margin-bottom: 20px;">
-        <video id="previewVideo" width="400"
-          style="display: none; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);" muted autoplay></video>
+      <div class="preview-block">
+        <img id="previewFrame" alt="Vorschau" />
       </div>
-      <div style="margin: 20px 0; text-align: center;align-content: center;">
+      
+
+      <div style="position: relative; margin: 20px 0; text-align: center;">
         <div id="hoverPreviewBox">
           <img id="hoverPreviewImage">
           <video id="hoverPreviewVideo" muted controls></video>
         </div>
         <canvas id="liveCanvas" width="800" height="30"></canvas>
-
         <div id="canvasTimeDisplay">00:00:00</div>
       </div>
+
+
+
 
       <div class="timeline" id="timeline"></div>
 
@@ -501,23 +530,24 @@
         <div id="mediaList" class="media-list"></div>
         <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
       </div>
-
-
-
-
-      <!-- Transition-Liste -->
-
-
-
-      <!-- Video-Container -->
-      <div id="videoContainer">
-        <h3>Finales Video</h3>
-        <video id="finalVideo" width="640" controls>
-          <source src="" type="video/mp4">
-          Dein Browser unterstützt dieses Videoformat nicht.
-        </video>
-      </div>
     </div>
+
+
+
+
+    <!-- Transition-Liste -->
+
+
+
+    <!-- Video-Container -->
+    <div id="videoContainer">
+      <h3>Finales Video</h3>
+      <video id="finalVideo" width="640" controls>
+        <source src="" type="video/mp4">
+        Dein Browser unterstützt dieses Videoformat nicht.
+      </video>
+    </div>
+  </div>
   </div>
 
 
@@ -1406,52 +1436,51 @@
     }
 
     function showPreviewAt(x) {
-      if (!timelineMap.length) return;
+  if (!timelineMap.length) return;
 
-      const totalDuration = timelineMap.at(-1)?.end || 0;
-      const timeInMs = (x / canvas.width) * totalDuration;
-      const formattedTime = formatTime(timeInMs);
-      canvasTimeDisplay.textContent = formattedTime;
+  const totalDuration = timelineMap.at(-1)?.end || 0;
+  const timeInMs = (x / canvas.width) * totalDuration;
+  const formattedTime = formatTime(timeInMs);
+  canvasTimeDisplay.textContent = formattedTime;
 
-      const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
-      if (!current) return;
+  const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
+  if (!current) return;
 
-      const offset = timeInMs - current.start;
+  const offset = timeInMs - current.start;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawTimeTicks(totalDuration);
-      drawTransitionMarkers(getTransitionMarkers(), totalDuration);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawTimeTicks(totalDuration);
+  drawTransitionMarkers(getTransitionMarkers(), totalDuration);
 
-      // Marker zeichnen
-      ctx.fillStyle = 'red';
-      ctx.fillRect(x, 0, 2, canvas.height - 30);
+  // Marker zeichnen
+  ctx.fillStyle = 'red';
+  ctx.fillRect(x, 0, 2, canvas.height - 30);
 
-      const previewBox = document.getElementById('hoverPreviewBox');
-      const previewImg = document.getElementById('hoverPreviewImage');
-      previewBox.style.display = 'block';
+  const previewFrame = document.getElementById('previewFrame');
 
-      if (current.type === 'IMAGE') {
-        // Einfaches Bild anzeigen
-        previewImg.src = `/media/${current.downloadName}`;
-        previewImg.style.display = 'block';
-      } else if (current.type === 'VIDEO') {
-        // Video vorbereiten und ein Frame ziehen
-        const tempVideo = document.createElement('video');
-        tempVideo.src = `/media/${current.downloadName}`;
-        tempVideo.muted = true;
-        tempVideo.currentTime = offset / 1000;
+  if (current.type === 'IMAGE') {
+    previewFrame.src = `/media/${current.downloadName}`;
+    previewFrame.style.display = 'block';
+  } else if (current.type === 'VIDEO') {
+    const tempVideo = document.createElement('video');
+    tempVideo.src = `/media/${current.downloadName}`;
+    tempVideo.muted = true;
+    tempVideo.currentTime = offset / 1000;
 
-        tempVideo.addEventListener('seeked', () => {
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = tempVideo.videoWidth;
-          tempCanvas.height = tempVideo.videoHeight;
-          const tempCtx = tempCanvas.getContext('2d');
-          tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-          previewImg.src = tempCanvas.toDataURL('image/jpeg');
-          previewImg.style.display = 'block';
-        }, { once: true });
-      }
-    }
+    tempVideo.addEventListener('seeked', () => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = tempVideo.videoWidth;
+      tempCanvas.height = tempVideo.videoHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+      previewFrame.src = tempCanvas.toDataURL('image/jpeg');
+      previewFrame.style.display = 'block';
+    }, { once: true });
+  }
+}
+
+
+
 
 
 
@@ -1482,12 +1511,6 @@
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       showPreviewAt(x);
-    });
-
-    previewVideo.addEventListener('seeked', () => {
-      requestAnimationFrame(() => {
-        drawImageScaled(previewVideo);
-      });
     });
 
 
