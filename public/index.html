@@ -83,6 +83,7 @@
 
     /* Media & Timeline-Styling */
     .preview {
+      justify-content: center;
       position: relative;
       flex-grow: 1;
       padding: 20px;
@@ -91,25 +92,28 @@
 
 
     #hoverPreviewBox {
-  display: block;
   position: absolute;
+  top: 100px; /* oder weiter runter, je nach Geschmack */
   left: 50%;
   transform: translateX(-50%);
-  top: calc(100px); /* ggf. anpassen je nach Position der Timeline */
-  z-index: 10;
-  text-align: center;
-  max-width: 100%;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  pointer-events: none; /* damit man durchklicken kann */
 }
 
+    #hoverPreviewImage,
+    #hoverPreviewVideo {
+      justify-content: center;
+      max-width: 400px;
+      max-height: 300px;
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
 
-#hoverPreviewImage,
-#hoverPreviewVideo {
-  max-width: 400px;
-  max-height: 300px;
-  border-radius: 6px;
-  display: none;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-}
 
     /* Canvas-Zeitleiste */
     #liveCanvas {
@@ -371,7 +375,7 @@
         box-shadow: none;
       }
 
-      
+
 
     }
 
@@ -458,14 +462,11 @@
       <!-- Zeitstrahl-Anzeige -->
       <div id="timelineDuration">Gesamtdauer: 00:00:00</div>
 
-      <!-- Timeline -->
 
-<!-- Vorschauvideo darunter -->
-<div style="text-align: center; margin-bottom: 20px;">
-  <video id="previewVideo" width="400"
-    style="display: none; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);" muted autoplay></video>
-</div>
-      <!-- Entferne Timeline-Bilder -->
+      <div style="text-align: center; margin-bottom: 20px;">
+        <video id="previewVideo" width="400"
+          style="display: none; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5);" muted autoplay></video>
+      </div>
       <div style="margin: 20px 0; text-align: center;align-content: center;">
         <div id="hoverPreviewBox">
           <img id="hoverPreviewImage">
@@ -494,19 +495,19 @@
             class="fas fa-th"></i></div>
 
       </div>
-      
+
       <div class="form-group">
         <h3>Medien</h3>
         <div id="mediaList" class="media-list"></div>
         <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
       </div>
 
-      
+
 
 
       <!-- Transition-Liste -->
-      
-      
+
+
 
       <!-- Video-Container -->
       <div id="videoContainer">
@@ -1108,7 +1109,7 @@
       return map;
     }
 
-    
+
 
 
     function getTransitionMarkers() {
@@ -1354,8 +1355,8 @@
     const ctx = canvas.getContext('2d');
     const previewVideo = document.getElementById('previewVideo');
     const canvasTimeDisplay = document.getElementById('canvasTimeDisplay');
-    
-    
+
+
     let timelineMap = [];
 
     function buildTimelineMap() {
