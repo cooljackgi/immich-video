@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
+const dotenv = require('dotenv');
 const FormData = require('form-data');
 const { generateVideo } = require('./processing/main-process');
 const { generateTitleOnly } = require('./processing/titel-generator');
@@ -181,6 +182,26 @@ app.get('/api/album', async (req, res) => {
     }
 });
 
+const envPath = path.join(__dirname, '../.env');
+
+// GET: .env laden und als JSON senden
+app.get('/api/env', (req, res) => {
+  const envConfig = dotenv.parse(fs.readFileSync(envPath));
+  res.json(envConfig);
+});
+
+// POST: .env speichern (überschreibt die Datei)
+app.post('/api/env', (req, res) => {
+  const newEnv = req.body;
+  const envString = Object.entries(newEnv)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+
+  fs.writeFileSync(envPath, envString);
+  res.json({ success: true });
+});
+
+
 app.post('/api/intro', async (req, res) => {
     try {
         const { title } = req.body;
@@ -346,7 +367,17 @@ app.post('/api/uploadFinal', async (req, res) => {
   }
 });
 
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
+app.use('/proxy/ollama', createProxyMiddleware({
+  target: 'http://localhost:11434',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/proxy/ollama': '/api', // 👈 ersetzt "proxy/ollama" durch "api"
+  },
+}));
+
+  
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server läuft auf http://127.0.0.1:${port}`);
 });

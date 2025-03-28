@@ -28,14 +28,79 @@
       grid-template-columns: 300px 1fr;
       height: 100vh;
       overflow: hidden;
-      /* Verhindert Scroll-Bars im Hintergrund */
     }
 
     .sidebar {
       background: var(--sidebar-bg);
-      padding: 20px;
+      padding: 25px 20px;
       overflow-y: auto;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .sidebar h3,
+    .sidebar-section-title {
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 4px;
+      font-size: 1rem;
+      color: #ffffffcc;
+    }
+
+    .sidebar label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #ddd;
+      margin-bottom: 4px;
+    }
+
+    .sidebar input[type="text"],
+    .sidebar select {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      background: #2a2a2a;
+      border: 1px solid #555;
+      border-radius: 5px;
+      color: white;
+      margin-bottom: 8px;
+      outline: none;
+    }
+
+    .sidebar button {
+      width: 100%;
+      padding: 10px 0;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 5px;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .sidebar button:hover {
+      background: #1e88e5;
+    }
+
+    .sidebar .form-group {
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+
+    .sidebar .form-group button+button {
+      margin-top: 6px;
     }
 
     h2,
@@ -43,45 +108,11 @@
       margin-top: 0;
     }
 
-    button {
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      padding: 10px 15px;
-      margin: 5px 0;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: #1e88e5;
-    }
-
     .form-group {
       margin-bottom: 20px;
     }
 
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-
-    input[type="text"],
-    select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background: #333;
-      color: #fff;
-      outline: none;
-      margin-bottom: 5px;
-    }
-
-    /* Media & Timeline-Styling */
+    /* Vorschau */
     .preview {
       justify-content: center;
       position: relative;
@@ -90,21 +121,28 @@
       overflow-y: auto;
     }
 
+    .preview-block {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      z-index: 5;
+    }
+
     #previewFrame {
-  display: block;
-  max-width: 600px;
-  max-height: 340px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
+      display: block;
+      max-width: 600px;
+      max-height: 340px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
 
     #hoverPreviewBox {
       position: absolute;
       bottom: 40px;
-      /* oder top: -320px, je nachdem */
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
@@ -124,18 +162,9 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
 
-
-    /* Canvas-Zeitleiste */
     #liveCanvas {
       background: #111;
       border-radius: 6px;
-    }
-
-    .form-group {
-      padding: 10px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.03);
     }
 
     .media-item:hover {
@@ -236,7 +265,6 @@
       background: var(--card-hover-bg);
     }
 
-
     .video-wrapper {
       position: relative;
       display: inline-block;
@@ -255,11 +283,9 @@
       display: block;
     }
 
-
     .video-wrapper.video-badge {
       display: block;
     }
-
 
     .video-preview {
       border: 2px solid transparent;
@@ -268,9 +294,7 @@
 
     .video-wrapper:hover .video-preview {
       border-color: rgb(47, 255, 0);
-      /* Randfarbe ändert sich bei Hover */
     }
-
 
     .duration-input {
       width: 70px;
@@ -301,7 +325,6 @@
       font-weight: bold;
       z-index: 10;
       display: block;
-      /* <- immer sichtbar */
     }
 
     .live-preview {
@@ -357,7 +380,6 @@
       background: var(--card-hover-bg);
     }
 
-    /* Video-Container */
     #videoContainer {
       display: none;
       margin-top: 20px;
@@ -366,27 +388,9 @@
       border-radius: 6px;
     }
 
-    /* Zeitstrahl für Gesamtdauer der Timeline */
     #timelineDuration {
       margin: 10px 20px;
       font-weight: bold;
-    }
-
-    /* Responsives Layout bei kleineren Bildschirmen */
-    @media (max-width: 800px) {
-      .container {
-        grid-template-columns: 1fr;
-        /* Sidebar oben, dann Preview */
-        grid-template-rows: auto 1fr;
-        height: auto;
-      }
-
-      .sidebar {
-        box-shadow: none;
-      }
-
-
-
     }
 
     .loading-spinner {
@@ -410,33 +414,142 @@
       }
     }
 
+    @media (max-width: 800px) {
+      .container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+      }
 
-    .preview-block {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 20px 0;
-      z-index: 5;
+      .sidebar {
+        box-shadow: none;
+        padding: 20px 15px;
+      }
     }
 
-    #previewVideo {
+    .settings-overlay {
+      overflow-y: auto;
+      height: 100vh; /* <- Wichtig */
+      padding-bottom: 80px;
+      /* damit nichts abgeschnitten wird */
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 96%;
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px;
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .settings-overlay.open {
+      transform: translateX(0);
+    }
+
+    .settings-overlay h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      border-bottom: 1px solid #555;
+      padding-bottom: 10px;
+    }
+
+    .settings-overlay label {
+      font-weight: 500;
+      margin-top: 15px;
       display: block;
-      max-width: 600px;
+    }
+
+    .settings-overlay input,
+    .settings-overlay select {
       width: 100%;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      margin-top: 5px;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+      background: #333;
+      color: white;
+    }
+
+    .settings-toggle-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 1100;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
+
 </head>
 
 <body>
+  <button class="settings-toggle-btn" onclick="toggleSettings()">
+    <i class="fas fa-cog"></i>
+  </button>
+
+  <div class="settings-overlay" id="settingsPanel">
+    <h2>Einstellungen</h2>
+
+    <div class="form-group">
+      <label for="OPENAI_API_KEY">OPENAI API Key</label>
+      <input type="text" id="OPENAI_API_KEY" />
+    </div>
+
+    <div class="form-group">
+      <label for="IMMICH_API_KEY">Immich API Key</label>
+      <input type="text" id="IMMICH_API_KEY" />
+    </div>
+
+    <div class="form-group">
+      <label for="GOOGLE_TRANSLATE_KEY">Google Translate Key</label>
+      <input type="text" id="GOOGLE_TRANSLATE_KEY" />
+    </div>
+
+    <div class="form-group">
+      <label for="IMMICH_API">Immich API</label>
+      <input type="text" id="IMMICH_API" />
+    </div>
+
+    <div class="form-group">
+      <label for="OLLAMA_ENDPOINT">Ollama Endpoint</label>
+      <input type="text" id="OLLAMA_ENDPOINT" />
+    </div>
+
+    <div class="form-group">
+      <label for="OLLAMA_MODEL">Ollama Modell</label>
+      <select id="OLLAMA_MODEL"></select>
+    </div>
+
+    <div class="form-group">
+      <label for="CAPTION_API_URL">Caption API URL</label>
+      <input type="text" id="CAPTION_API_URL" />
+    </div>
+
+    <div class="form-group">
+      <label for="PORT">Port (optional)</label>
+      <input type="text" id="PORT" />
+    </div>
+
+    <div class="form-group">
+      <label for="previewSize">Vorschau-Größe</label>
+      <input type="range" id="previewSize" min="200" max="800" value="600" />
+    </div>
+
+    <button onclick="saveEnvSettings()" style="margin-top: 20px; width: 100%;">Speichern</button>
+  </div>
+
   <div class="container">
-    <!-- Sidebar (Neu strukturiert) -->
+    <!-- Sidebar -->
     <div class="sidebar">
       <h2>Menü</h2>
 
-      <!-- 🔹 Albumverwaltung -->
       <h3>Album</h3>
       <div class="form-group">
         <label for="albumSelect">1. Album auswählen</label>
@@ -449,15 +562,12 @@
         <input type="text" id="uploadAlbum" placeholder="Album-ID">
       </div>
 
-      <!-- 🔹 Medien & Timeline -->
       <h3>Medien</h3>
       <div class="form-group">
-        <button id="addAllToTimelineBtn" style="width:100%">Alle mit Zufallsü. hinzufügen</button>
-        <button id="addAllNoTransitionBtn"> Alle Medien hinzufügen </button>
+        <button id="addAllToTimelineBtn">Alle mit Zufallsü. hinzufügen</button>
+        <button id="addAllNoTransitionBtn">Alle Medien hinzufügen</button>
       </div>
 
-
-      <!-- 🔹 Titel & Intro -->
       <h3>Videotitel</h3>
       <div class="form-group">
         <label for="title">Titel</label>
@@ -465,16 +575,14 @@
         <select id="titleSelect" style="display:none; margin-top: 10px;"></select>
       </div>
       <div class="form-group">
-        <button id="generateTitleBtn" style="width:100%">Titel generieren</button>
-        <button id="generateIntroBtn" style="width:100%">Intro Clip generieren</button>
+        <button id="generateTitleBtn">Titel generieren</button>
+        <button id="generateIntroBtn">Intro Clip generieren</button>
       </div>
 
-      <!-- 🔹 Export -->
       <h3>Export</h3>
-
       <div class="form-group">
-        <button id="exportBtn" class="btn-primary" style="width:100%">Export starten</button>
-        <button id="uploadFinalBtn" style="width:100%">Finales Video hochladen</button>
+        <button id="exportBtn" class="btn-primary">Export starten</button>
+        <button id="uploadFinalBtn">Finales Video hochladen</button>
       </div>
       <div class="form-group">
         <label for="resolution">Auflösung</label>
@@ -485,14 +593,13 @@
       </div>
     </div>
 
+    <!-- Preview und Timeline Bereich -->
     <div class="preview">
-      <!-- Zeitstrahl-Anzeige -->
       <div id="timelineDuration">Gesamtdauer: 00:00:00</div>
 
       <div class="preview-block">
         <img id="previewFrame" alt="Vorschau" />
       </div>
-      
 
       <div style="position: relative; margin: 20px 0; text-align: center;">
         <div id="hoverPreviewBox">
@@ -502,9 +609,6 @@
         <canvas id="liveCanvas" width="800" height="30"></canvas>
         <div id="canvasTimeDisplay">00:00:00</div>
       </div>
-
-
-
 
       <div class="timeline" id="timeline"></div>
 
@@ -522,7 +626,6 @@
             class="fas fa-circle"></i></div>
         <div class="transition-item" draggable="true" data-transition="pixelize" title="Pixelize"><i
             class="fas fa-th"></i></div>
-
       </div>
 
       <div class="form-group">
@@ -531,13 +634,6 @@
         <div id="loadingIndicator" class="loading-spinner" style="display: none;"></div>
       </div>
     </div>
-
-
-
-
-    <!-- Transition-Liste -->
-
-
 
     <!-- Video-Container -->
     <div id="videoContainer">
@@ -548,8 +644,6 @@
       </video>
     </div>
   </div>
-  </div>
-
 
   <script>
     let mediaItems = [];
@@ -557,6 +651,125 @@
     let draggedItem = null;
     let draggedTransition = null;
     let draggedTimelineIndex = null;
+
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      panel.classList.toggle('open');
+    }
+
+    // Beispiel-Eventlistener für Vorschaugröße
+    document.addEventListener("DOMContentLoaded", () => {
+      const previewSizeInput = document.getElementById("previewSize");
+      const previewFrame = document.getElementById("previewFrame");
+      loadEnvFromServer();
+      if (previewSizeInput && previewFrame) {
+        previewSizeInput.addEventListener("input", (e) => {
+          const value = e.target.value;
+          previewFrame.style.maxWidth = `${value}px`;
+        });
+      }
+    });
+
+
+    document.getElementById("OLLAMA_ENDPOINT").addEventListener("change", () => {
+      const currentValue = document.getElementById("OLLAMA_MODEL").value;
+      populateOllamaModels(currentValue);
+    });
+
+    async function populateOllamaModels(currentModel = "") {
+      const select = document.getElementById("OLLAMA_MODEL");
+      endpoint = "http://192.168.3.108:3001/proxy/ollama/api/tags";
+
+
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        const models = data.models;
+
+        select.innerHTML = "";
+        models.forEach(model => {
+          const opt = document.createElement("option");
+          opt.value = model.name;
+          const label = `${model.name} (${model.details?.parameter_size || '?'}, ${model.details?.quantization_level || '?'})`;
+          opt.textContent = label;
+          if (model.name === currentModel) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.warn("Kann Ollama Modelle nicht laden:", err);
+        select.innerHTML = `<option>Fehler beim Laden</option>`;
+      }
+    }
+
+
+
+    async function loadEnvFromServer() {
+      try {
+        const res = await fetch('http://localhost:3001/api/env');
+        const env = await res.json();
+
+        const keys = [
+          "OPENAI_API_KEY",
+          "IMMICH_API_KEY",
+          "GOOGLE_TRANSLATE_KEY",
+          "IMMICH_API",
+          "OLLAMA_ENDPOINT",
+          "OLLAMA_MODEL",
+          "CAPTION_API_URL",
+          "PORT"
+        ];
+
+        keys.forEach(key => {
+          const el = document.getElementById(key);
+          if (el) el.value = env[key] || "";
+        });
+
+        // 🔽 Direkt danach Modelle laden
+        populateOllamaModels(env.OLLAMA_MODEL || "");
+
+      } catch (err) {
+        console.error("Fehler beim Laden der .env:", err);
+      }
+    }
+
+
+    async function saveEnvSettings() {
+      const keys = [
+        "OPENAI_API_KEY",
+        "IMMICH_API_KEY",
+        "GOOGLE_TRANSLATE_KEY",
+        "IMMICH_API",
+        "OLLAMA_ENDPOINT",
+        "OLLAMA_MODEL",
+        "CAPTION_API_URL",
+        "PORT"
+      ];
+
+      const updatedEnv = {};
+      keys.forEach(key => {
+        const el = document.getElementById(key);
+        if (el) updatedEnv[key] = el.value;
+      });
+
+      try {
+        const res = await fetch('http://localhost:3001/api/env', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedEnv)
+        });
+
+        if (res.ok) {
+          alert(".env gespeichert!");
+        } else {
+          alert("Fehler beim Speichern der .env");
+        }
+      } catch (err) {
+        console.error("Fehler beim Speichern:", err);
+      }
+    }
+
+
+
 
     // Standarddauer für Bilder: 5000 ms
     function ensureImageDuration(item) {
@@ -1436,48 +1649,48 @@
     }
 
     function showPreviewAt(x) {
-  if (!timelineMap.length) return;
+      if (!timelineMap.length) return;
 
-  const totalDuration = timelineMap.at(-1)?.end || 0;
-  const timeInMs = (x / canvas.width) * totalDuration;
-  const formattedTime = formatTime(timeInMs);
-  canvasTimeDisplay.textContent = formattedTime;
+      const totalDuration = timelineMap.at(-1)?.end || 0;
+      const timeInMs = (x / canvas.width) * totalDuration;
+      const formattedTime = formatTime(timeInMs);
+      canvasTimeDisplay.textContent = formattedTime;
 
-  const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
-  if (!current) return;
+      const current = timelineMap.find(item => timeInMs >= item.start && timeInMs < item.end);
+      if (!current) return;
 
-  const offset = timeInMs - current.start;
+      const offset = timeInMs - current.start;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawTimeTicks(totalDuration);
-  drawTransitionMarkers(getTransitionMarkers(), totalDuration);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTimeTicks(totalDuration);
+      drawTransitionMarkers(getTransitionMarkers(), totalDuration);
 
-  // Marker zeichnen
-  ctx.fillStyle = 'red';
-  ctx.fillRect(x, 0, 2, canvas.height - 30);
+      // Marker zeichnen
+      ctx.fillStyle = 'red';
+      ctx.fillRect(x, 0, 2, canvas.height - 30);
 
-  const previewFrame = document.getElementById('previewFrame');
+      const previewFrame = document.getElementById('previewFrame');
 
-  if (current.type === 'IMAGE') {
-    previewFrame.src = `/media/${current.downloadName}`;
-    previewFrame.style.display = 'block';
-  } else if (current.type === 'VIDEO') {
-    const tempVideo = document.createElement('video');
-    tempVideo.src = `/media/${current.downloadName}`;
-    tempVideo.muted = true;
-    tempVideo.currentTime = offset / 1000;
+      if (current.type === 'IMAGE') {
+        previewFrame.src = `/media/${current.downloadName}`;
+        previewFrame.style.display = 'block';
+      } else if (current.type === 'VIDEO') {
+        const tempVideo = document.createElement('video');
+        tempVideo.src = `/media/${current.downloadName}`;
+        tempVideo.muted = true;
+        tempVideo.currentTime = offset / 1000;
 
-    tempVideo.addEventListener('seeked', () => {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = tempVideo.videoWidth;
-      tempCanvas.height = tempVideo.videoHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
-      previewFrame.src = tempCanvas.toDataURL('image/jpeg');
-      previewFrame.style.display = 'block';
-    }, { once: true });
-  }
-}
+        tempVideo.addEventListener('seeked', () => {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = tempVideo.videoWidth;
+          tempCanvas.height = tempVideo.videoHeight;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.drawImage(tempVideo, 0, 0, tempCanvas.width, tempCanvas.height);
+          previewFrame.src = tempCanvas.toDataURL('image/jpeg');
+          previewFrame.style.display = 'block';
+        }, { once: true });
+      }
+    }
 
 
 

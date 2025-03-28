@@ -9,6 +9,7 @@
     "dotenv": "^16.4.7",
     "exif-parser": "^0.1.12",
     "express": "^4.21.2",
-    "fluent-ffmpeg": "^2.1.2"
+    "fluent-ffmpeg": "^2.1.2",
+    "http-proxy-middleware": "^3.0.3"
   }
 }
