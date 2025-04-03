@@ -1,0 +1,22 @@
+{
+    "menu": "Menu",
+    "select_album": "1. Select Album",
+    "upload_album_id": "Upload Album ID",
+    "album": "Album",
+    "media": "Media",
+    "title": "Title",
+    "generate_title": "Generate Title",
+    "generate_intro": "Generate Intro Clip",
+    "export": "Start Export",
+    "upload_final": "Upload Final Video",
+    "resolution": "Resolution",
+    "preview_size": "Preview Size",
+    "settings_title": "Settings",
+    "language": "Language",
+    "final_video": "Final Video",
+    "transitions": "Transitions",
+    "add_random_transitions": "Add All with Random Transitions",
+    "add_all_media": "Add All Media",
+    "total_duration": "Total Duration: "
+  }
+  

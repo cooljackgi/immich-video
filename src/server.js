@@ -238,7 +238,7 @@ app.post('/api/export', async (req, res) => {
 
       // Übergabe von exportData statt req.body
       // Wir übergeben jetzt exportData und outputPath
-      const outputFile = await generateFinalVideo(exportData, outputPath);
+      const outputFile = await generateFinalVideo(exportData, outputPath, sendProgressUpdate);
       console.log("POST /api/export - Finales Video erstellt:", outputFile);
       res.json({ success: true, file: outputFile });
   } catch (error) {
@@ -376,6 +376,62 @@ app.use('/proxy/ollama', createProxyMiddleware({
     '^/proxy/ollama': '/api', // 👈 ersetzt "proxy/ollama" durch "api"
   },
 }));
+
+
+
+
+const clients = []; // global am Anfang der Datei (z. B. direkt nach `const app = express()` definieren)
+
+app.get('/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    res.write('retry: 10000\n\n'); // Wiederverbindungsintervall für SSE
+
+    clients.push(res);
+    console.log("📡 Neuer SSE-Client verbunden. Gesamt:", clients.length);
+
+    req.on('close', () => {
+        const index = clients.indexOf(res);
+        if (index !== -1) clients.splice(index, 1);
+        console.log("❌ SSE-Client getrennt. Gesamt:", clients.length);
+    });
+});
+
+  
+function sendProgressUpdate(message) {
+    clients.forEach(client => {
+        client.write(`data: ${message}\n\n`);
+    });
+}
+
+  
+
+// Fortschritt-Sender global speichern
+let currentExportClients = [];
+
+app.get('/api/export-progress', (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive'
+  });
+  res.flushHeaders();
+
+  // Direkt einmal "verbunden" senden
+  res.write(`data: ⏳ Export gestartet...\n\n`);
+
+  currentExportClients.push(res);
+
+  // Bei Disconnect entfernen
+  req.on('close', () => {
+    currentExportClients = currentExportClients.filter(c => c !== res);
+  });
+});
+
+
+
 
   
 app.listen(port, '0.0.0.0', () => {

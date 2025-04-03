@@ -8,20 +8,22 @@
   <title>Video Editor</title>
   <style>
     :root {
-      --primary: #2196F3;
-      --background-start: #2c3e50;
-      --background-end: #4ca1af;
-      --sidebar-bg: rgba(0, 0, 0, 0.4);
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --card-hover-bg: rgba(255, 255, 255, 0.15);
-    }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background: linear-gradient(to right, var(--background-start), var(--background-end));
-      color: white;
-    }
+    --primary: #4CAF50; /* Modernere Farbe für Buttons */
+    --background-start: #1e3c72; /* Sanfterer Farbverlauf */
+    --background-end: #2a5298;
+    --sidebar-bg: rgba(0, 0, 0, 0.6); /* Etwas dunkler für besseren Kontrast */
+    --card-bg: rgba(255, 255, 255, 0.08);
+    --card-hover-bg: rgba(255, 255, 255, 0.2);
+    --text-color: #f0f0f0; /* Angenehmere Textfarbe */
+    --border-color: rgba(255, 255, 255, 0.2);
+  }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    background: linear-gradient(to right, var(--background-start), var(--background-end));
+    color: var(--text-color);
+    line-height: 1.6;
+  }
 
     .container {
       display: grid;
@@ -32,9 +34,9 @@
 
     .sidebar {
       background: var(--sidebar-bg);
-      padding: 25px 20px;
+      padding: 5px;
       overflow-y: auto;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+      box-shadow: 2px 0 5px rgba(42, 227, 206, 0.3);
       display: flex;
       flex-direction: column;
       gap: 25px;
@@ -42,7 +44,7 @@
 
     .sidebar h3,
     .sidebar-section-title {
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 4px;
       font-size: 1rem;
@@ -86,22 +88,34 @@
     }
 
     .sidebar .form-group {
-      padding: 15px;
+      padding: 10px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 6px;
       background: rgba(255, 255, 255, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 1px;
     }
 
     .sidebar-section {
       margin-bottom: 25px;
     }
 
-    .sidebar .form-group button+button {
-      margin-top: 6px;
-    }
+    .sidebar .form-group button {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #b1afaf;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar .form-group button:hover {
+  background: #2a2a2a;
+}
 
     h2,
     h3 {
@@ -130,6 +144,8 @@
     }
 
     #previewFrame {
+      background: #000; /* <- schwarze Fläche */
+      border: 2px solid #444;
       display: block;
       max-width: 600px;
       max-height: 340px;
@@ -207,7 +223,7 @@
     }
 
     .timeline::before {
-      content: "Ziehen Sie Medien hierhin";
+      content: "Drop media here";
       color: #ccc;
       font-size: 1.1em;
       display: none;
@@ -485,6 +501,39 @@
       border-radius: 4px;
       cursor: pointer;
     }
+    .progress-log {
+  background-color: #0d0d0d;
+  color: #00ff99;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 16px;
+  border-radius: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0,255,100,0.1);
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  transition: all 0.2s ease-in-out;
+}
+#videoContainer {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+  pointer-events: none;
+  margin: 20px;
+  padding: 20px;
+  background: var(--card-bg);
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+#videoContainer.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+
   </style>
 
 </head>
@@ -497,6 +546,14 @@
   <div class="settings-overlay" id="settingsPanel">
     <h2>Einstellungen</h2>
 
+    <div class="form-group">
+      <label for="languageSelect">Sprache / Language</label>
+      <select id="languageSelect">
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+    
     <div class="form-group">
       <label for="OPENAI_API_KEY">OPENAI API Key</label>
       <input type="text" id="OPENAI_API_KEY" />
@@ -537,6 +594,8 @@
       <input type="text" id="PORT" />
     </div>
 
+    
+
     <div class="form-group">
       <label for="previewSize">Vorschau-Größe</label>
       <input type="range" id="previewSize" min="200" max="800" value="600" />
@@ -548,57 +607,69 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2>Menü</h2>
+      
+      <h2 data-i18n="menu">Menü</h2>
 
       <h3>Album</h3>
       <div class="form-group">
-        <label for="albumSelect">1. Album auswählen</label>
+        <label data-i18n="select_album">1. Album auswählen</label>
         <select id="albumSelect">
           <option value="">-- Bitte wählen --</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="uploadAlbum">Album-ID für Upload</label>
+        <label for="uploadAlbum" data-i18n="upload_album_id">Album-ID für Upload</label>
         <input type="text" id="uploadAlbum" placeholder="Album-ID">
+        
       </div>
 
       <h3>Medien</h3>
       <div class="form-group">
-        <button id="addAllToTimelineBtn">Alle mit Zufallsü. hinzufügen</button>
-        <button id="addAllNoTransitionBtn">Alle Medien hinzufügen</button>
+        <button id="addAllToTimelineBtn" data-i18n="add_random_transitions">Alle mit Zufallsü. hinzufügen</button>
+        <button id="addAllNoTransitionBtn" data-i18n="add_all_media">Alle Medien hinzufügen</button>        
       </div>
 
       <h3>Videotitel</h3>
       <div class="form-group">
-        <label for="title">Titel</label>
-        <input type="text" id="title" class="form-control" value="Generierter Titel">
-        <select id="titleSelect" style="display:none; margin-top: 10px;"></select>
+        <label for="title" data-i18n="title">Titel</label>
+<input type="text" id="title" class="form-control" value="Generierter Titel">
+<select id="titleSelect" style="display:none; margin-top: 10px;"></select>
       </div>
       <div class="form-group">
-        <button id="generateTitleBtn">Titel generieren</button>
-        <button id="generateIntroBtn">Intro Clip generieren</button>
+        <button id="generateTitleBtn" data-i18n="generate_title">Titel generieren</button>
+        <button id="generateIntroBtn" data-i18n="generate_intro">Intro Clip generieren</button>        
       </div>
 
       <h3>Export</h3>
       <div class="form-group">
-        <button id="exportBtn" class="btn-primary">Export starten</button>
-        <button id="uploadFinalBtn">Finales Video hochladen</button>
-      </div>
+        <button id="exportBtn" class="btn-primary" data-i18n="export">Export starten</button>
+        <button id="uploadFinalBtn" data-i18n="upload_final">Finales Video hochladen</button>
+              </div>
       <div class="form-group">
-        <label for="resolution">Auflösung</label>
+        <label for="resolution" data-i18n="resolution">Auflösung</label>
         <select id="resolution">
           <option value="1080p">1920x1080</option>
           <option value="720p">1280x720</option>
-        </select>
+        </select>        
       </div>
     </div>
 
     <!-- Preview und Timeline Bereich -->
     <div class="preview">
-      <div id="timelineDuration">Gesamtdauer: 00:00:00</div>
+      <div id="timelineDuration" data-i18n-prefix="total_duration">Gesamtdauer: 00:00:00</div>
+      <!-- Video-Container -->
+    <div id="videoContainer">
+      <h3 data-i18n="final_video">Finales Video</h3>
+      <video id="finalVideo" width="640" controls>
+        <source src="" type="video/mp4">
+        Dein Browser unterstützt dieses Videoformat nicht.
+      </video>
+
+    </div>
+      <div class="progress-log" id="progressLog"></div>
 
       <div class="preview-block">
-        <img id="previewFrame" alt="Vorschau" />
+        <img id="previewFrame" />
       </div>
 
       <div style="position: relative; margin: 20px 0; text-align: center;">
@@ -612,7 +683,7 @@
 
       <div class="timeline" id="timeline"></div>
 
-      <h3>Übergänge</h3>
+      <h3 data-i18n="transitions">Übergänge</h3>
       <div id="transitionList" class="transition-list">
         <div class="transition-item" draggable="true" data-transition="fade" title="Fade"><i class="fas fa-adjust"></i>
         </div>
@@ -635,27 +706,55 @@
       </div>
     </div>
 
-    <!-- Video-Container -->
-    <div id="videoContainer">
-      <h3>Finales Video</h3>
-      <video id="finalVideo" width="640" controls>
-        <source src="" type="video/mp4">
-        Dein Browser unterstützt dieses Videoformat nicht.
-      </video>
-    </div>
-  </div>
+    
+  
 
   <script>
+    let currentLang = localStorage.getItem("lang") || "de";
+    let translations = {};
     let mediaItems = [];
     let timelineItems = [];
     let draggedItem = null;
     let draggedTransition = null;
     let draggedTimelineIndex = null;
 
+    async function loadTranslations(lang) {
+    try {
+      const res = await fetch(`/i18n/${lang}.json`);
+      translations = await res.json();
+      updateUI();
+    } catch (e) {
+      console.error("Fehler beim Laden der Sprachdatei:", e);
+    }
+  }
+
+  function t(key) {
+    return translations[key] || key;
+  }
+
+  function updateUI() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const key = el.getAttribute("data-i18n");
+      if (translations[key]) el.textContent = translations[key];
+    });
+  }
+
+  document.getElementById("languageSelect").addEventListener("change", e => {
+    currentLang = e.target.value;
+    localStorage.setItem("lang", currentLang);
+    loadTranslations(currentLang);
+  });
+
+
     function toggleSettings() {
       const panel = document.getElementById('settingsPanel');
       panel.classList.toggle('open');
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("languageSelect").value = currentLang;
+    loadTranslations(currentLang);
+  });
 
     // Beispiel-Eventlistener für Vorschaugröße
     document.addEventListener("DOMContentLoaded", () => {
@@ -668,8 +767,9 @@
           previewFrame.style.maxWidth = `${value}px`;
         });
       }
+      listenToExportProgress();
     });
-
+    
 
     document.getElementById("OLLAMA_ENDPOINT").addEventListener("change", () => {
       const currentValue = document.getElementById("OLLAMA_MODEL").value;
@@ -1407,6 +1507,27 @@
       });
     }
 
+    function listenToExportProgress() {
+    const eventSource = new EventSource('/events');
+    const progressLog = document.getElementById('progressLog');
+
+    eventSource.onmessage = (event) => {
+  const msg = event.data;
+  const line = document.createElement('div');
+  line.textContent = msg;
+
+  if (msg.includes('❌')) line.style.color = 'red';
+  else if (msg.includes('⚠️')) line.style.color = 'orange';
+  else if (msg.includes('✅')) line.style.color = 'lightgreen';
+  else if (msg.includes('📷') || msg.includes('🎞️')) line.style.color = '#0ff';
+
+  document.getElementById('progressLog').appendChild(line);
+  progressLog.scrollTop = progressLog.scrollHeight;
+};
+
+}
+
+
 
     function formatDuration(durationMs) {
       if (!durationMs || isNaN(durationMs)) {
@@ -1503,6 +1624,8 @@
 
     document.getElementById('exportBtn').addEventListener('click', async () => {
       // Sicherstellen, dass die Dauer für alle Medien korrekt ist
+      listenToExportProgress();
+
       timelineItems.forEach(item => {
         if (item.type !== 'TRANSITION') {
           ensureImageDuration(item);
@@ -1562,6 +1685,11 @@
         const videoPlayer = document.getElementById('finalVideo');
         const fileName = data.file.split('/').pop();
         videoPlayer.src = '/output/' + fileName;
+        videoPlayer.load();
+        videoPlayer.play();
+        const container = document.getElementById('videoContainer');
+        container.classList.add('visible');
+        container.scrollIntoView({ behavior: 'smooth' });
         document.getElementById('videoContainer').style.display = 'block';
       } catch (error) {
         console.error('Export-Fehler:', error);

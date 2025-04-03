@@ -1,0 +1,22 @@
+{
+    "menu": "Menü",
+    "select_album": "1. Album auswählen",
+    "upload_album_id": "Album-ID für Upload",
+    "album": "Album",
+    "media": "Medien",
+    "title": "Titel",
+    "generate_title": "Titel generieren",
+    "generate_intro": "Intro Clip generieren",
+    "export": "Export starten",
+    "upload_final": "Finales Video hochladen",
+    "resolution": "Auflösung",
+    "preview_size": "Vorschau-Größe",
+    "settings_title": "Einstellungen",
+    "language": "Sprache / Language",
+    "final_video": "Finales Video",
+    "transitions": "Übergänge",
+    "add_random_transitions": "Alle mit Zufallsü. hinzufügen",
+    "add_all_media": "Alle Medien hinzufügen",
+    "total_duration": "Gesamtdauer: "
+  }
+  

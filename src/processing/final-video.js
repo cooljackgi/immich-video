@@ -4,6 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const { runFFmpegCommand } = require('./ffmpeg-utils');
 const { processImageWithDuration } = require('./ffmpeg');
 const { spawn, execSync, exec } = require('child_process');
+const { sendProgressUpdate } = require('../server'); // Importiere es aus server.js
 
 function parseTimeStringToMs(timeStr) {
   const parts = timeStr.split(':');
@@ -92,66 +93,81 @@ async function processVideo(inputPath, outputPath) {
   });
 }
 
-async function generateFinalVideo(options, outputPath) {
+async function generateFinalVideo(options, outputPath, progressCallback = () => {}) {
   try {
     if (!options || !options.media) throw new Error('Export-Optionen ungültig: media fehlt.');
 
-    const timelineAssets = options.media;
-    const mediaFolder = path.join(__dirname, '../../medien');
-    const tempFolder = path.join(__dirname, '../../temp');
-    if (!fs.existsSync(tempFolder)) fs.mkdirSync(tempFolder, { recursive: true });
+    
 
-    const processedClips = [];
-    const transitions = [];
-    let videoIndex = 0;
+const timelineAssets = options.media;
+const mediaFolder = path.join(__dirname, '../../medien');
+const tempFolder = path.join(__dirname, '../../temp');
+if (!fs.existsSync(tempFolder)) fs.mkdirSync(tempFolder, { recursive: true });
+progressCallback(`🚀 Starte Videoexport: "${options.title || 'Untitled'}"`);
+progressCallback(`🎞️ Medienanzahl: ${timelineAssets.length}`);
+const processedClips = [];
+const transitions = [];
+let videoIndex = 0;
 
-    for (let i = 0; i < timelineAssets.length; i++) {
-      const asset = timelineAssets[i];
-      if (asset.type === 'TRANSITION') {
-        transitions.push({ transition: asset.transition || 'fade', duration: (asset.duration || 1000) / 1000 });
-        continue;
-      }
-      if (!asset.downloadName) continue;
+for (let i = 0; i < timelineAssets.length; i++) {
+  const asset = timelineAssets[i];
+  if (asset.type === 'TRANSITION') {
+    transitions.push({
+      transition: asset.transition || 'fade',
+      duration: (asset.duration || 1000) / 1000
+    });
+    progressCallback(`🔁 Übergang hinzugefügt: "${asset.transition}" @ Position ${i}`);
+    continue;
+  }
 
-      const ext = path.extname(asset.downloadName).toLowerCase();
-      const inputPath = path.join(mediaFolder, asset.downloadName);
-      const clipOutput = path.join(tempFolder, `clip_${videoIndex}.mp4`);
-      const durationMs = asset.duration || 5000;
-      const durationSec = durationMs / 1000;
+  if (!asset.downloadName) continue;
 
-      if (asset.type === 'IMAGE') {
-        await processImageWithDuration(inputPath, clipOutput, durationSec);
-      } else {
-        await processVideo(inputPath, clipOutput);
-      }
+  const ext = path.extname(asset.downloadName).toLowerCase();
+  const inputPath = path.join(mediaFolder, asset.downloadName);
+  const clipOutput = path.join(tempFolder, `clip_${videoIndex}.mp4`);
+  const durationMs = asset.duration || 5000;
+  const durationSec = durationMs / 1000;
 
-      const clipWithAudio = ensureAudioTrack(clipOutput);
+  progressCallback(`⚙️ Verarbeite Clip ${videoIndex + 1}: ${asset.downloadName}`);
 
-      processedClips.push({
-        clipOutput: clipWithAudio,
-        duration: durationMs,
-        durationSec,
-        hasAudio: true
-      });
+  if (asset.type === 'IMAGE') {
+    await processImageWithDuration(inputPath, clipOutput, durationSec);
+    progressCallback(`🖼️ Bild umgewandelt: ${asset.downloadName}`);
+  } else {
+    await processVideo(inputPath, clipOutput);
+    progressCallback(`🎞️ Video verarbeitet: ${asset.downloadName}`);
+  }
 
-      videoIndex++;
-    }
+  const clipWithAudio = ensureAudioTrack(clipOutput);
 
-    if (processedClips.length === 0) throw new Error('❌ Keine Clips vorhanden – Video kann nicht erstellt werden.');
+  processedClips.push({
+    clipOutput: clipWithAudio,
+    duration: durationMs,
+    durationSec,
+    hasAudio: true
+  });
 
-    await createFinalVideoWithTransitions(processedClips, outputPath, transitions);
-    console.log(`✅ Export abgeschlossen: ${outputPath}`);
-    // ⬇️ NEU: Nur verwendete Dateien behalten
-    const usedFiles = timelineAssets
-      .filter(asset => asset.downloadName)
-      .map(asset => asset.downloadName);
+  progressCallback(`📦 Clip gespeichert (${videoIndex + 1}/${timelineAssets.length}): ${asset.downloadName}`);
+  videoIndex++;
+}
 
-    cleanAllMediaFiles();
-    return outputPath;
+if (processedClips.length === 0) {
+  throw new Error('❌ Keine Clips vorhanden – Video kann nicht erstellt werden.');
+}
+
+progressCallback(`🧰 Übergänge werden angewendet…`);
+await createFinalVideoWithTransitions(processedClips, outputPath, transitions);
+progressCallback(`✅ Export abgeschlossen: ${outputPath}`);
+
+progressCallback(`🧹 Aufräumen abgeschlossen.`);
+return outputPath;
+
+
   } catch (error) {
     console.error("❌ Fehler in generateFinalVideo:", error);
     throw error;
   }
+  
 }
 
 function cleanUnusedMedia(usedFiles = []) {
