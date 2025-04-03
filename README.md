@@ -13,6 +13,7 @@ Media can be easily arranged in an intuitive drag-and-drop timeline.
 
 ## ✨ Features
 
+
 ### 🖼️ Automatic Media Import
 - Media is loaded directly via the Immich API
 - Supports Live Photos (including video part), thumbnails, and videos
@@ -106,6 +107,15 @@ Der Immich Video Editor ist eine Webanwendung zur automatischen Erstellung von V
 Die Medien lassen sich einfach in einer intuitiven Drag-&-Drop-Timeline arrangieren.
 
 ## ✨ Features
+
+## Mehrsprachigkeit (i18n)
+
+Die Anwendung unterstützt Deutsch und Englisch. Spracheinstellungen können über das Einstellungsmenü vorgenommen werden.
+
+### Sprachdateien
+Die Übersetzungen liegen im Verzeichnis:
+- `./i18n/de.json`
+- `./i18n/en.json`  
 
 ### 🖼️ Automatischer Medienimport
 - Medien werden direkt über die Immich API geladen
