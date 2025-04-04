@@ -160,6 +160,7 @@ await createFinalVideoWithTransitions(processedClips, outputPath, transitions, o
 
 
 
+if (Array.isArray(options.audio) && options.audio.length > 0 && options.audio[0].url) {
   const audioUrl = options.audio[0].url;
   const audioTempPath = path.join(tempFolder, 'temp_audio.mp3');
   const mixedOutputPath = outputPath.replace('.mp4', '_mixed.mp4');
@@ -171,12 +172,15 @@ await createFinalVideoWithTransitions(processedClips, outputPath, transitions, o
 -filter_complex "[1:a]volume=0.09[aquiet];[0:a][aquiet]amix=inputs=2:duration=first:dropout_transition=3[aout]" \
 -map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "${mixedOutputPath}"`;
 
-
   progressCallback(`🎚️ Mische finalen Audio-Track…`);
   execSync(ffmpegCmd, { stdio: 'inherit' });
 
   fs.renameSync(mixedOutputPath, outputPath);
   progressCallback(`✅ Finaler Audiomix abgeschlossen: ${outputPath}`);
+} else {
+  progressCallback(`🎧 Kein zusätzlicher Audiotrack – Audio bleibt wie im Clip.`);
+}
+
 
 
   progressCallback(`✅ Export abgeschlossen: ${outputPath}`);
