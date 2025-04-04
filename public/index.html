@@ -92,6 +92,13 @@
       gap: 1px;
     }
 
+    .timeline-item.audio-layer {
+  background: rgba(102, 255, 102, 0.1);
+  border: 1px dashed #66ff66;
+  color: #66ff66;
+}
+
+
     .sidebar-section {
       margin-bottom: 25px;
     }
@@ -677,6 +684,14 @@
 
       <div class="timeline" id="timeline"></div>
 
+      <h3 data-i18n="ccmixter_music">ccMixter Musik</h3>
+      <div class="form-group">
+        <input id="ccmixterSearchInput" type="text" placeholder="Stichwort (z.B. lofi, piano, ambient)" />
+        <button onclick="searchCCMixter()">Suchen</button>
+      </div>
+      <div id="ccmixterResults" class="media-list"></div>
+      
+      
       <h3 data-i18n="transitions">Übergänge</h3>
       <div id="transitionList" class="transition-list">
         <div class="transition-item" draggable="true" data-transition="fade" title="Fade"><i class="fas fa-adjust"></i>
@@ -721,6 +736,67 @@
       console.error("Fehler beim Laden der Sprachdatei:", e);
     }
   }
+
+  const JAMENDO_CLIENT_ID = '8311099f';
+
+async function searchCCMixter() {
+  const query = document.getElementById('ccmixterSearchInput').value.trim();
+  const resultsContainer = document.getElementById('ccmixterResults');
+  resultsContainer.innerHTML = '<p>🔍 Suche in Jamendo…</p>';
+
+  if (!query) {
+    resultsContainer.innerHTML = '<p>Bitte Suchbegriff eingeben.</p>';
+    return;
+  }
+
+  const jamendoTracks = await fetchJamendoTracks(query);
+  resultsContainer.innerHTML = '';
+
+  const jamendoHeader = document.createElement('h4');
+  jamendoHeader.textContent = '🎶 Jamendo';
+  resultsContainer.appendChild(jamendoHeader);
+
+  if (jamendoTracks.length === 0) {
+    resultsContainer.innerHTML += '<p>Keine Jamendo-Titel gefunden.</p>';
+    return;
+  }
+
+  jamendoTracks.forEach(track => {
+    const div = document.createElement('div');
+    div.classList.add('track');
+    div.draggable = true;
+
+    div.innerHTML = `
+      <div><strong>${track.name}</strong> – ${track.artist_name}</div>
+      <audio controls src="${track.audio}" style="width: 100%; margin-top: 4px;"></audio>
+      <small>Lizenz: <a href="${track.license_ccurl}" target="_blank">${track.license_ccurl}</a></small>
+    `;
+
+    div.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'AUDIO',
+        title: track.name,
+        artist: track.artist_name,
+        url: track.audio,
+        duration: track.duration,
+        license: track.license_ccurl,
+        source: 'jamendo'
+      }));
+    });
+
+    resultsContainer.appendChild(div);
+  });
+}
+
+async function fetchJamendoTracks(query) {
+  const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=10&namesearch=${encodeURIComponent(query)}&audioformat=mp31`;
+  const res = await fetch(url);
+  const json = await res.json();
+  return json.results;
+}
+
+
+
 
   function t(key) {
     return translations[key] || key;
@@ -1400,7 +1476,21 @@ durationEl.textContent = prefix + formatMsToTime(totalMs);
           const icon = transitionIcons[item.transition] || '🔁';
 
           div.innerHTML = `<span style="font-size: 1.4em;">${icon}</span>`;
-        }
+        } else if (item.type === 'AUDIO') {
+  div.classList.add('audio-layer');
+
+  const icon = document.createElement('i');
+  icon.className = 'fas fa-music';
+  icon.style.color = '#66ff66';
+  icon.style.fontSize = '1.4em';
+  div.appendChild(icon);
+
+  const label = document.createElement('span');
+  label.textContent = item.title || 'Audio';
+  label.style.marginLeft = '6px';
+  div.appendChild(label);
+}
+
 
 
         const removeBtn = document.createElement('button');
