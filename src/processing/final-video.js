@@ -156,8 +156,31 @@ if (processedClips.length === 0) {
 }
 
 progressCallback(`🧰 Übergänge werden angewendet…`);
-await createFinalVideoWithTransitions(processedClips, outputPath, transitions);
-progressCallback(`✅ Export abgeschlossen: ${outputPath}`);
+await createFinalVideoWithTransitions(processedClips, outputPath, transitions, options.audio);
+
+
+
+  const audioUrl = options.audio[0].url;
+  const audioTempPath = path.join(tempFolder, 'temp_audio.mp3');
+  const mixedOutputPath = outputPath.replace('.mp4', '_mixed.mp4');
+
+  progressCallback(`🎵 Lade Audio von ${audioUrl}`);
+  execSync(`curl -L "${audioUrl}" -o "${audioTempPath}"`);
+
+  const ffmpegCmd = `ffmpeg -i "${outputPath}" -i "${audioTempPath}" \
+-filter_complex "[1:a]volume=0.09[aquiet];[0:a][aquiet]amix=inputs=2:duration=first:dropout_transition=3[aout]" \
+-map 0:v -map "[aout]" -c:v copy -c:a aac -shortest -y "${mixedOutputPath}"`;
+
+
+  progressCallback(`🎚️ Mische finalen Audio-Track…`);
+  execSync(ffmpegCmd, { stdio: 'inherit' });
+
+  fs.renameSync(mixedOutputPath, outputPath);
+  progressCallback(`✅ Finaler Audiomix abgeschlossen: ${outputPath}`);
+
+
+  progressCallback(`✅ Export abgeschlossen: ${outputPath}`);
+
 
 progressCallback(`🧹 Aufräumen abgeschlossen.`);
 return outputPath;
@@ -222,11 +245,25 @@ function cleanAllMediaFiles() {
   });
 }
 
-function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = []) {
-  const inputArgs = mediaFiles.map(file => `-i "${file.clipOutput}"`).join(' ');
+function createFinalVideoWithTransitions(mediaFiles, outputPath, transitions = [], audioTracks = []) {
+  let inputArgs = mediaFiles.map(file => `-i "${file.clipOutput}"`).join(' ');
   const hasTransitions = Array.isArray(transitions) && transitions.length > 0;
 
-  const filterParts = [];
+  
+  const audioInputs = [];
+  const audioFilterInputs = [];
+  const audioOffsets = [];
+
+  audioTracks.forEach((track, idx) => {
+    const safeUrl = track.url.replace(/"/g, '\"');
+    inputArgs += ` -itsoffset ${track.start || 0} -i "${safeUrl}"`;
+    audioInputs.push(`[${mediaFiles.length + idx}:a]`);
+  });
+
+  const allAudios = mediaFiles.length > 1 ? `[aout]` : `[0:a]`;
+  const mixInputs = [allAudios, ...audioInputs];
+  const mixFilter = `${mixInputs.join('')}amix=inputs=${mixInputs.length}:duration=longest[audioMixed]`;
+const filterParts = [];
   const audioParts = [];
   let videoOut = '';
   let audioOut = '';

@@ -227,8 +227,18 @@ app.post('/api/export', async (req, res) => {
     const exportData = {
       title: req.body.title,
       media: req.body.media,
-      resolution: req.body.resolution // Auflösung hinzufügen
+      resolution: req.body.resolution, //  Auflösung hinzufügen
+      audio: req.body.audio // 🔥 das hat gefehlt!
     };
+    if (exportData.audio && Array.isArray(exportData.audio)) {
+      console.log(`🎧 Audio empfangen – Anzahl: ${exportData.audio.length}`);
+      exportData.audio.forEach((track, i) => {
+        console.log(`  ▶️ [${i}] Titel: ${track.title}`);
+        console.log(`     URL: ${track.url}`);
+      });
+    } else {
+      console.log('🚫 Kein Audio im Export-Request enthalten.');
+    }
 
     // Hier den gewünschten Outputnamen generieren
     let outputFileName = exportData.title ? exportData.title : 'final-video';
