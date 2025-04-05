@@ -11,6 +11,7 @@ const { generateFinalVideo } = require('./processing/final-video');
 const { uploadAssetFile, addAssetsToAlbum } = require('./processing/immich-api');
 const { downloadLivePhotoVideo } = require('./processing/immich-api');
 const { generateThumbnail } = require('./processing/video-thumbnail');
+const { generateMusicTagsOnly } = require('./processing/titel-generator');
 
 
 require('dotenv').config();
@@ -256,6 +257,18 @@ app.post('/api/export', async (req, res) => {
     res.status(500).send(error.message);
   }
 });
+
+
+app.get('/api/generateMusicTags', async (req, res) => {
+  const { albumId } = req.query;
+  try {
+    const tags = await generateMusicTagsOnly(albumId);
+    res.json(tags);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Fehler beim Generieren der Musik-Tags' });
+  }
+});
+
 
 
 app.get('/api/livePhotoVideo', async (req, res) => {

@@ -665,6 +665,7 @@
       <div class="form-group">
         <button id="generateTitleBtn" data-i18n="generate_title">Titel generieren</button>
         <button id="generateIntroBtn" data-i18n="generate_intro">Intro Clip generieren</button>
+        <button id="generate-music-tags" class="btn">🎼 Generate Music Tags</button>
       </div>
 
       <h3>Export</h3>
@@ -763,6 +764,16 @@
           console.error("Fehler beim Laden der Sprachdatei:", e);
         }
       }
+
+      document.getElementById('generate-music-tags').addEventListener('click', async () => {
+        const albumId = document.getElementById('uploadAlbum').value;
+        const response = await fetch(`/api/generateMusicTags?albumId=${albumId}`);
+  const tags = await response.json();
+
+  document.getElementById('ccmixterSearchInput').value = tags.join(', ');
+});
+
+
 
       const JAMENDO_CLIENT_ID = '8311099f';
 
