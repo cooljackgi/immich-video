@@ -5,6 +5,7 @@ const { runFFmpegCommand } = require('./ffmpeg-utils');
 const { processImageWithDuration } = require('./ffmpeg');
 const { spawn, execSync, exec } = require('child_process');
 const { sendProgressUpdate } = require('../server'); // Importiere es aus server.js
+const LIVE_REPEAT_COUNT = process.env.LIVE_REPEAT_COUNT || 5;
 
 function parseTimeStringToMs(timeStr) {
   const parts = timeStr.split(':');
@@ -320,8 +321,22 @@ const filterParts = [];
     audioOut = `[${outLabelA}]`;
   }
 
-  const filterComplex = [...filterParts, ...audioParts].join('; ');
-  const ffmpegCommand = `ffmpeg ${inputArgs} -filter_complex "${filterComplex}" -map "${videoOut}" -map "${audioOut}" -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 192k -y "${outputPath}"`;
+  let finalVideoOut = videoOut;
+let finalAudioOut = audioOut;
+
+if (mediaFiles.length > transitions.length + 1) {
+  const lastIndex = mediaFiles.length - 1;
+
+  // letzte Clip-Datei anhängen
+  filterParts.push(`${videoOut}[${lastIndex}:v]concat=n=2:v=1:a=0[vout_final]`);
+  audioParts.push(`${audioOut}[${lastIndex}:a]concat=n=2:v=0:a=1[aout_final]`);
+
+  finalVideoOut = '[vout_final]';
+  finalAudioOut = '[aout_final]';
+}
+
+const filterComplex = [...filterParts, ...audioParts].join('; ');
+const ffmpegCommand = `ffmpeg ${inputArgs} -filter_complex "${filterComplex}" -map "${finalVideoOut}" -map "${finalAudioOut}" -c:v libx264 -crf 23 -preset fast -c:a aac -b:a 192k -y "${outputPath}"`;
 
   console.log('[createFinalVideoWithTransitions] FFmpeg Command:\n' + ffmpegCommand);
   execSync(ffmpegCommand, { stdio: 'inherit' });

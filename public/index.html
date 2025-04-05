@@ -628,6 +628,11 @@
       <input type="range" id="previewSize" min="200" max="800" value="600" />
     </div>
 
+    <div class="form-group">
+      <label for="LIVE_REPEAT_COUNT">Live-Video Wiederholungen</label>
+      <input type="number" id="LIVE_REPEAT_COUNT" min="1" max="10" value="5" />
+    </div>
+
     <button onclick="saveEnvSettings()" style="margin-top: 20px; width: 100%;">Speichern</button>
   </div>
 
@@ -654,6 +659,7 @@
       <div class="form-group">
         <button id="addAllToTimelineBtn" data-i18n="add_random_transitions">Alle mit Zufallsü. hinzufügen</button>
         <button id="addAllNoTransitionBtn" data-i18n="add_all_media">Alle Medien hinzufügen</button>
+        <button id="addLivePhotosBtn">📸 Alle Livebilder einfügen</button>
       </div>
 
       <h3>Videotitel</h3>
@@ -712,7 +718,7 @@
       <div class="timeline" id="timeline"></div>
       <div id="audioTimeline" class="timeline-layer audio-track-layer"></div>
 
-      <h3 data-i18n="ccmixter_music">ccMixter Musik</h3>
+      <h3 data-i18n="ccmixter_music">Musik Import from Jamendo</h3>
       <div class="form-group">
         <input id="ccmixterSearchInput" type="text" placeholder="Stichwort (z.B. lofi, piano, ambient)" />
         <button onclick="searchCCMixter()">Suchen</button>
@@ -768,10 +774,10 @@
       document.getElementById('generate-music-tags').addEventListener('click', async () => {
         const albumId = document.getElementById('uploadAlbum').value;
         const response = await fetch(`/api/generateMusicTags?albumId=${albumId}`);
-  const tags = await response.json();
+        const tags = await response.json();
 
-  document.getElementById('ccmixterSearchInput').value = tags.join(', ');
-});
+        document.getElementById('ccmixterSearchInput').value = tags.join(', ');
+      });
 
 
 
@@ -812,8 +818,8 @@
 
           div.addEventListener('dragstart', (e) => {
             div.addEventListener('dblclick', () => {
-  addAudioToTimeline(track);
-});
+              addAudioToTimeline(track);
+            });
             e.dataTransfer.setData('application/json', JSON.stringify({
               type: 'AUDIO',
               title: track.name,
@@ -832,26 +838,26 @@
       }
 
       function addAudioToTimeline(track) {
-  const start = totalAudioDuration;
-  const src = track.url || track.src;
-  const title = track.title || '🎵 Audio';
+        const start = totalAudioDuration;
+        const src = track.url || track.src;
+        const title = track.title || '🎵 Audio';
 
-  const audio = new Audio(src);
-  audio.addEventListener('loadedmetadata', () => {
-    const duration = audio.duration || track.duration || 10;
+        const audio = new Audio(src);
+        audio.addEventListener('loadedmetadata', () => {
+          const duration = audio.duration || track.duration || 10;
 
-    audioTimeline.push({
-      ...track,
-      src,
-      title,
-      start,
-      duration
-    });
+          audioTimeline.push({
+            ...track,
+            src,
+            title,
+            start,
+            duration
+          });
 
-    totalAudioDuration += duration;
-    renderAudioTimeline();
-  });
-}
+          totalAudioDuration += duration;
+          renderAudioTimeline();
+        });
+      }
 
 
       async function fetchJamendoTracks(query) {
@@ -969,19 +975,19 @@
       });
 
       const audioDropZone = document.getElementById('audioTimeline');
-audioDropZone.addEventListener('dragover', e => e.preventDefault());
-audioDropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  try {
-    const data = e.dataTransfer.getData('application/json');
-    const parsed = JSON.parse(data);
-    if (parsed?.type === 'AUDIO') {
-      addAudioToTimeline(parsed);
-    }
-  } catch (err) {
-    console.warn("Fehler beim Drop auf Audio-Timeline:", err);
-  }
-});
+      audioDropZone.addEventListener('dragover', e => e.preventDefault());
+      audioDropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        try {
+          const data = e.dataTransfer.getData('application/json');
+          const parsed = JSON.parse(data);
+          if (parsed?.type === 'AUDIO') {
+            addAudioToTimeline(parsed);
+          }
+        } catch (err) {
+          console.warn("Fehler beim Drop auf Audio-Timeline:", err);
+        }
+      });
 
 
       document.getElementById("OLLAMA_ENDPOINT").addEventListener("change", () => {
@@ -1171,6 +1177,32 @@ audioDropZone.addEventListener('drop', e => {
 
         renderTimeline();
       });
+
+      document.getElementById('addLivePhotosBtn').addEventListener('click', () => {
+        if (!mediaItems || mediaItems.length === 0) {
+          alert("Keine Medien geladen!");
+          return;
+        }
+
+        const liveItems = mediaItems.filter(item => item.isLivePhoto);
+
+        if (liveItems.length === 0) {
+          alert("Keine Live-Bilder im aktuellen Album gefunden.");
+          return;
+        }
+
+        liveItems.forEach(item => {
+          // Wenn das Live-Video sehr kurz ist, z. B. < 4 Sekunden → mehrfach pushen
+
+          timelineItems.push(item);
+
+        });
+
+        renderTimeline();
+        console.log(`📸 ${liveItems.length} Livebilder hinzugefügt.`);
+      });
+
+
 
       async function init() {
         /* try {
@@ -1422,7 +1454,7 @@ audioDropZone.addEventListener('drop', e => {
 
 
       async function loadVideoThumbnails() {
-        for (const item of mediaItems) {
+        const tasks = mediaItems.map(async (item, index) => {
           if (item.type === 'VIDEO' && !item.thumbnail) {
             try {
               const response = await fetch(`/api/videoThumbnail?videoName=${item.downloadName}`);
@@ -1432,16 +1464,20 @@ audioDropZone.addEventListener('drop', e => {
               const blob = await response.blob();
               const thumbUrl = URL.createObjectURL(blob);
               item.thumbnail = thumbUrl;
-              console.log(`Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
-              const img = document.querySelector(`.media-item[data-index="${mediaItems.indexOf(item)}"] img`);
+              console.log(`📷 Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
+
+              // DOM-Update nur, wenn das Element noch da ist
+              const img = document.querySelector(`.media-item[data-index="${index}"] img`);
               if (img) {
                 img.src = thumbUrl;
               }
             } catch (error) {
-              console.error(`Fehler beim Laden des Thumbnails: ${error.message}`);
+              console.error(`❌ Fehler beim Laden des Thumbnails: ${error.message}`);
             }
           }
-        }
+        });
+
+        await Promise.all(tasks);
       }
 
       function addToTimeline(item) {
@@ -1478,7 +1514,9 @@ audioDropZone.addEventListener('drop', e => {
           div.addEventListener('dragstart', handleMediaDragStart);
 
           // 👇 Fügt das Medium zur Timeline hinzu, wenn es doppelt geklickt wird
-          div.addEventListener('dblclick', () => {
+          div.addEventListener('dblclick', (event) => {
+            // Wenn das Target ein Input-Feld ist → nicht zur Timeline hinzufügen
+            if (event.target.tagName.toLowerCase() === 'input') return;
             addToTimeline(item);
           });
 
@@ -1515,11 +1553,28 @@ audioDropZone.addEventListener('drop', e => {
 
             // 🟥 LIVE-Badge, wenn isLivePhoto gesetzt ist
             if (item.isLivePhoto) {
-              const liveBadge = document.createElement('span');
-              liveBadge.className = 'live-icon';
-              liveBadge.innerText = 'LIVE';
-              videoContainer.appendChild(liveBadge);
+              const repeatLabel = document.createElement('label');
+              repeatLabel.textContent = '🔁 Wiederh.:';
+
+              const repeatInput = document.createElement('input');
+              repeatInput.type = 'number';
+              repeatInput.min = '1';
+              repeatInput.max = '10';
+              repeatInput.value = item.repeat || document.getElementById('LIVE_REPEAT_COUNT').value || 5;
+              repeatInput.style.width = '60px';
+              repeatInput.addEventListener('change', (e) => {
+                item.repeat = parseInt(e.target.value) || 1;
+              });
+
+              const repeatWrapper = document.createElement('div');
+              repeatWrapper.style.display = 'flex';
+              repeatWrapper.style.gap = '5px';
+              repeatWrapper.style.alignItems = 'center';
+              repeatWrapper.appendChild(repeatLabel);
+              repeatWrapper.appendChild(repeatInput);
+              div.appendChild(repeatWrapper);
             }
+
 
             // Hover-Effekt
             div.addEventListener('mouseenter', () => video.play());
@@ -1868,38 +1923,41 @@ audioDropZone.addEventListener('drop', e => {
         });
 
         const exportData = {
-  title: document.getElementById('title').value,
-  media: timelineItems.flatMap(item => {
-    if (item.type === 'TRANSITION') {
-      return [{
-        type: item.type,
-        transition: item.transition,
-        duration: item.duration
-      }];
-    }
+          title: document.getElementById('title').value,
+          media: timelineItems.flatMap(item => {
+            if (item.type === 'TRANSITION') {
+              return [{
+                type: item.type,
+                transition: item.transition,
+                duration: item.duration
+              }];
+            }
 
-    if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
-      return [item, item, item];
-    }
+            if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
+              const repeat = item.repeat || parseInt(document.getElementById('LIVE_REPEAT_COUNT').value) || 5;
+              return Array.from({ length: repeat }, () => ({ ...item }));
 
-    return [{
-      type: item.type,
-      downloadName: item.downloadName,
-      duration: item.duration
-    }];
-  }),
-  audio: audioTimeline.map(track => ({
-    type: 'AUDIO',
-    url: track.src,
-    title: track.title,
-    duration: track.duration,
-    start: track.start,
-    artist: track.artist || '',
-    license: track.license || '',
-    source: track.source || 'jamendo'
-  })),
-  resolution: document.getElementById('resolution').value
-};
+            }
+
+
+            return [{
+              type: item.type,
+              downloadName: item.downloadName,
+              duration: item.duration
+            }];
+          }),
+          audio: audioTimeline.map(track => ({
+            type: 'AUDIO',
+            url: track.src,
+            title: track.title,
+            duration: track.duration,
+            start: track.start,
+            artist: track.artist || '',
+            license: track.license || '',
+            source: track.source || 'jamendo'
+          })),
+          resolution: document.getElementById('resolution').value
+        };
 
         console.log("Export-Daten:", exportData);
         try {
@@ -2086,6 +2144,31 @@ audioDropZone.addEventListener('drop', e => {
 
 
       init();
+      // 💡 Album-ID aus der URL lesen und automatisch setzen
+      window.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const albumId = params.get("albumId");
+
+        if (albumId) {
+          const select = document.getElementById("albumSelect");
+
+          // Warten bis die Alben geladen sind
+          const waitForAlbum = setInterval(() => {
+            if (select && select.options.length > 1) {
+              const option = Array.from(select.options).find(opt => opt.value === albumId);
+              if (option) {
+                select.value = albumId;
+                select.dispatchEvent(new Event("change"));
+                console.log("✅ Album automatisch ausgewählt:", albumId);
+              } else {
+                console.warn("⚠️ Album-ID nicht in Liste gefunden:", albumId);
+              }
+              clearInterval(waitForAlbum);
+            }
+          }, 200);
+        }
+      });
+
     </script>
 </body>
 
