@@ -628,6 +628,11 @@
       <input type="range" id="previewSize" min="200" max="800" value="600" />
     </div>
 
+    <div class="form-group">
+      <label for="LIVE_REPEAT_COUNT">Live-Video Wiederholungen</label>
+      <input type="number" id="LIVE_REPEAT_COUNT" min="1" max="10" value="5" />
+    </div>
+
     <button onclick="saveEnvSettings()" style="margin-top: 20px; width: 100%;">Speichern</button>
   </div>
 
@@ -654,6 +659,7 @@
       <div class="form-group">
         <button id="addAllToTimelineBtn" data-i18n="add_random_transitions">Alle mit Zufallsü. hinzufügen</button>
         <button id="addAllNoTransitionBtn" data-i18n="add_all_media">Alle Medien hinzufügen</button>
+        <button id="addLivePhotosBtn">📸 Alle Livebilder einfügen</button>
       </div>
 
       <h3>Videotitel</h3>
@@ -1172,6 +1178,32 @@ audioDropZone.addEventListener('drop', e => {
         renderTimeline();
       });
 
+      document.getElementById('addLivePhotosBtn').addEventListener('click', () => {
+  if (!mediaItems || mediaItems.length === 0) {
+    alert("Keine Medien geladen!");
+    return;
+  }
+
+  const liveItems = mediaItems.filter(item => item.isLivePhoto);
+
+  if (liveItems.length === 0) {
+    alert("Keine Live-Bilder im aktuellen Album gefunden.");
+    return;
+  }
+
+  liveItems.forEach(item => {
+    // Wenn das Live-Video sehr kurz ist, z. B. < 4 Sekunden → mehrfach pushen
+    
+      timelineItems.push(item);
+    
+  });
+
+  renderTimeline();
+  console.log(`📸 ${liveItems.length} Livebilder hinzugefügt.`);
+});
+
+
+
       async function init() {
         /* try {
             const response = await fetch('/api/album');
@@ -1422,27 +1454,31 @@ audioDropZone.addEventListener('drop', e => {
 
 
       async function loadVideoThumbnails() {
-        for (const item of mediaItems) {
-          if (item.type === 'VIDEO' && !item.thumbnail) {
-            try {
-              const response = await fetch(`/api/videoThumbnail?videoName=${item.downloadName}`);
-              if (!response.ok) {
-                throw new Error(`Thumbnail konnte nicht geladen werden: ${item.downloadName}`);
-              }
-              const blob = await response.blob();
-              const thumbUrl = URL.createObjectURL(blob);
-              item.thumbnail = thumbUrl;
-              console.log(`Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
-              const img = document.querySelector(`.media-item[data-index="${mediaItems.indexOf(item)}"] img`);
-              if (img) {
-                img.src = thumbUrl;
-              }
-            } catch (error) {
-              console.error(`Fehler beim Laden des Thumbnails: ${error.message}`);
-            }
-          }
+  const tasks = mediaItems.map(async (item, index) => {
+    if (item.type === 'VIDEO' && !item.thumbnail) {
+      try {
+        const response = await fetch(`/api/videoThumbnail?videoName=${item.downloadName}`);
+        if (!response.ok) {
+          throw new Error(`Thumbnail konnte nicht geladen werden: ${item.downloadName}`);
         }
+        const blob = await response.blob();
+        const thumbUrl = URL.createObjectURL(blob);
+        item.thumbnail = thumbUrl;
+        console.log(`📷 Thumbnail geladen für ${item.downloadName}:`, thumbUrl);
+
+        // DOM-Update nur, wenn das Element noch da ist
+        const img = document.querySelector(`.media-item[data-index="${index}"] img`);
+        if (img) {
+          img.src = thumbUrl;
+        }
+      } catch (error) {
+        console.error(`❌ Fehler beim Laden des Thumbnails: ${error.message}`);
       }
+    }
+  });
+
+  await Promise.all(tasks);
+}
 
       function addToTimeline(item) {
         console.log("Medium zur Timeline hinzufügen:", item);
@@ -1879,8 +1915,10 @@ audioDropZone.addEventListener('drop', e => {
     }
 
     if (item.type === 'VIDEO' && item.isLivePhoto && item.duration < 4000) {
-      return [item, item, item];
-    }
+  const repeatCount = parseInt(document.getElementById('LIVE_REPEAT_COUNT').value) || 5;
+  return Array.from({ length: repeatCount }, () => ({ ...item }));
+}
+
 
     return [{
       type: item.type,
@@ -2086,6 +2124,31 @@ audioDropZone.addEventListener('drop', e => {
 
 
       init();
+      // 💡 Album-ID aus der URL lesen und automatisch setzen
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const albumId = params.get("albumId");
+
+  if (albumId) {
+    const select = document.getElementById("albumSelect");
+
+    // Warten bis die Alben geladen sind
+    const waitForAlbum = setInterval(() => {
+      if (select && select.options.length > 1) {
+        const option = Array.from(select.options).find(opt => opt.value === albumId);
+        if (option) {
+          select.value = albumId;
+          select.dispatchEvent(new Event("change"));
+          console.log("✅ Album automatisch ausgewählt:", albumId);
+        } else {
+          console.warn("⚠️ Album-ID nicht in Liste gefunden:", albumId);
+        }
+        clearInterval(waitForAlbum);
+      }
+    }, 200);
+  }
+});
+
     </script>
 </body>
 
