@@ -265,7 +265,7 @@
 
     .timeline-item {
       background: var(--card-bg);
-      padding: 8px 12px;
+      padding: 4px 5px;
       border-radius: 4px;
       display: flex;
       align-items: center;
@@ -561,11 +561,44 @@
       transform: translateY(0);
       pointer-events: auto;
     }
+
+    .sidebar-toggle-btn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1100;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.container.collapsed-sidebar {
+  grid-template-columns: 0 1fr;
+}
+
+.container:not(.collapsed-sidebar) .sidebar {
+  width: 300px;
+  transition: width 0.3s ease;
+}
+
   </style>
 
 </head>
 
 <body>
+  <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
   <button class="settings-toggle-btn" onclick="toggleSettings()">
     <i class="fas fa-cog"></i>
   </button>
@@ -640,7 +673,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
 
-      <h2 data-i18n="menu">Menü</h2>
+      <h2 data-i18n="menu">    Menü</h2>
 
       <h3>Album</h3>
       <div class="form-group">
@@ -718,12 +751,33 @@
       <div class="timeline" id="timeline"></div>
       <div id="audioTimeline" class="timeline-layer audio-track-layer"></div>
 
-      <h3 data-i18n="ccmixter_music">Musik Import from Jamendo</h3>
-      <div class="form-group">
-        <input id="ccmixterSearchInput" type="text" placeholder="Stichwort (z.B. lofi, piano, ambient)" />
-        <button onclick="searchCCMixter()">Suchen</button>
-      </div>
-      <div id="ccmixterResults" class="media-list"></div>
+      <h3>Musiksuche</h3>
+<div class="form-group">
+  <input id="ccmixterSearchInput" type="text" placeholder="Stichwort (z.B. lofi, piano, ambient)" />
+  <button onclick="searchCCMixter()">🔎 Suche starten</button>
+</div>
+
+<!-- Schnellauswahl Buttons -->
+<div class="form-group" style="display: flex; flex-wrap: wrap; gap: 6px;">
+  <button onclick="quickSearch('lofi')">🎵 Lofi</button>
+  <button onclick="quickSearch('piano')">🎹 Piano</button>
+  <button onclick="quickSearch('ambient')">🌌 Ambient</button>
+  <button onclick="quickSearch('rock')">🎸 Rock</button>
+  <button onclick="quickSearch('electronic')">🎛️ Electronic</button>
+  <button onclick="quickSearch('chill')">❄️ Chill</button>
+  <button onclick="quickSearch('hiphop')">🎤 HipHop</button>
+  <button onclick="quickSearch('classical')">🎻 Klassik</button>
+</div>
+
+<!-- Extra Buttons -->
+<div class="form-group" style="display: flex; flex-wrap: wrap; gap: 6px;">
+  <button onclick="randomMusicSearch()">🎲 Zufälliges Genre</button>
+  <button onclick="searchTopTracks()">🔥 Beliebte Songs</button>
+</div>
+
+<!-- Suchergebnisse -->
+<div id="ccmixterResults" class="media-list"></div>
+
 
 
       <h3 data-i18n="transitions">Übergänge</h3>
@@ -2065,6 +2119,52 @@
 
         return map;
       }
+
+      function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const container = document.querySelector('.container');
+  sidebar.classList.toggle('collapsed');
+  container.classList.toggle('collapsed-sidebar');
+}
+
+function quickSearch(term) {
+  document.getElementById('ccmixterSearchInput').value = term;
+  searchCCMixter();
+}
+
+function randomMusicSearch() {
+  const genres = ['lofi', 'piano', 'ambient', 'rock', 'electronic', 'chill', 'hiphop', 'classical'];
+  const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+  document.getElementById('ccmixterSearchInput').value = randomGenre;
+  searchCCMixter();
+}
+
+async function searchTopTracks() {
+  const resultsContainer = document.getElementById('ccmixterResults');
+  resultsContainer.innerHTML = '<p>🔍 Suche beliebte Songs…</p>';
+
+  const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${JAMENDO_CLIENT_ID}&format=json&limit=10&order=popularity_total&audioformat=mp31`;
+  const res = await fetch(url);
+  const json = await res.json();
+  displayTracks(json.results);
+}
+
+function displayTracks(tracks) {
+  const resultsContainer = document.getElementById('ccmixterResults');
+  resultsContainer.innerHTML = '';
+  tracks.forEach(track => {
+    const div = document.createElement('div');
+    div.classList.add('track');
+    div.innerHTML = `
+      <div><strong>${track.name}</strong> – ${track.artist_name}</div>
+      <audio controls src="${track.audio}" style="width: 100%; margin-top: 4px;"></audio>
+      <small>Lizenz: <a href="${track.license_ccurl}" target="_blank">${track.license_ccurl}</a></small>
+    `;
+    resultsContainer.appendChild(div);
+  });
+}
+
+
 
       function formatTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
